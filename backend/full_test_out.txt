@@ -1,0 +1,31 @@
+﻿User: UMA MAHESWAR REDDY
+Γ£à tbl_cp_student
+node : 
+At line:1 char:73
++ ... op\Artiset 
+internship\backend"; 
+node 
+test_full_submit.js 
+2>&1 | Out-F ...
++                      
+               ~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (:String) [],    
+ RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+Γ¥î FAILED: Incorrect 
+integer value: 
+'current' for column 
+'pincode_id' at row 1
+SQL: INSERT INTO 
+tbl_cp_student_address 
+(student_id,address_lin
+e_1,address_line_2,land
+mark,pincode_id,address
+_type) VALUES 
+(?,?,?,?,?,?)

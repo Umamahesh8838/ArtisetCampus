@@ -1,0 +1,22 @@
+﻿Γ¥î ALTER TABLE tbl_cp_mcountries MODIFY COLUMN country_id INT NOT NULL AUTO_INCREME
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mstates MODIFY COLUMN state_id INT NOT NULL AUTO_INCREMENT
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mcities MODIFY COLUMN city_id INT NOT NULL AUTO_INCREMENT
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mpincodes MODIFY COLUMN pincode_id INT NOT NULL AUTO_INCREMEN
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mcolleges MODIFY COLUMN college_id INT NOT NULL AUTO_INCREMEN
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mcourses MODIFY COLUMN course_id INT NOT NULL AUTO_INCREMENT
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_minterests MODIFY COLUMN interest_id INT NOT NULL AUTO_INCREM
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mskills MODIFY COLUMN skill_id INT NOT NULL AUTO_INCREMENT
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mlanguages MODIFY COLUMN language_id INT NOT NULL AUTO_INCREM
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ¥î ALTER TABLE tbl_cp_mcertifications MODIFY COLUMN certification_id INT NOT NULL A
+   Error: Incorrect table definition; there can be only one auto column and it must be defined as a key
+
+Done. Restart your backend server now.

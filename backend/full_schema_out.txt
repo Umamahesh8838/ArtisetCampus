@@ -1,0 +1,103 @@
+﻿
+=== tbl_cp_mcountries ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  country_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  country_name | varchar(100) | Null:NO | Key:UNI | Default:null | Extra:
+  country_code | varchar(5) | Null:NO | Key:UNI | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mstates ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  state_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  state_name | varchar(100) | Null:NO | Key:MUL | Default:null | Extra:
+  state_code | varchar(10) | Null:YES | Key: | Default:XX | Extra:
+  country_id | int | Null:NO | Key:MUL | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mcities ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  city_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  city_name | varchar(100) | Null:NO | Key:MUL | Default:null | Extra:
+  state_id | int | Null:NO | Key:MUL | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mpincodes ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  pincode_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  pincode | varchar(20) | Null:NO | Key:UNI | Default:null | Extra:
+  city_id | int | Null:NO | Key:MUL | Default:null | Extra:
+  area_name | varchar(150) | Null:YES | Key: | Default:Unknown Area | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mcolleges ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  college_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  college_name | varchar(255) | Null:NO | Key:UNI | Default:null | Extra:
+  spoc_name | varchar(150) | Null:YES | Key: | Default:Not Assigned | Extra:
+  spoc_phone | varchar(20) | Null:YES | Key: | Default:0000000000 | Extra:
+  spoc_email | varchar(255) | Null:YES | Key: | Default:noreply@college.com | Extra:
+  tpo_name | varchar(150) | Null:YES | Key: | Default:Not Assigned | Extra:
+  tpo_phone | varchar(20) | Null:YES | Key: | Default:0000000000 | Extra:
+  tpo_email | varchar(255) | Null:YES | Key: | Default:noreply@college.com | Extra:
+  student_coordinator_name | varchar(150) | Null:YES | Key: | Default:Not Assigned | Extra:
+  student_coordinator_phone | varchar(20) | Null:YES | Key: | Default:0000000000 | Extra:
+  student_coordinator_email | varchar(255) | Null:YES | Key: | Default:noreply@college.com | Extra:
+  reference_details | text | Null:YES | Key: | Default:null | Extra:
+  priority | int | Null:NO | Key: | Default:5 | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mcourses ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  course_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  course_name | varchar(150) | Null:NO | Key:MUL | Default:null | Extra:
+  course_code | varchar(50) | Null:NO | Key:MUL | Default:null | Extra:
+  specialization_name | varchar(150) | Null:NO | Key: | Default:General | Extra:
+  specialization_code | varchar(50) | Null:NO | Key: | Default:GEN | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_minterests ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  interest_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  name | varchar(150) | Null:NO | Key:UNI | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mskills ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  skill_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  name | varchar(100) | Null:NO | Key:UNI | Default:null | Extra:
+  description | varchar(255) | Null:YES | Key: | Default:No description | Extra:
+  language_id | int | Null:NO | Key:MUL | Default:null | Extra:
+  version | varchar(50) | Null:YES | Key: | Default:N/A | Extra:
+  complexity | varchar(50) | Null:YES | Key: | Default:Beginner | Extra:
+  status | varchar(30) | Null:YES | Key: | Default:Active | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mlanguages ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  language_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  language_code | varchar(20) | Null:NO | Key:UNI | Default:null | Extra:
+  language_name | varchar(100) | Null:NO | Key:UNI | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+
+=== tbl_cp_mcertifications ===
+  row_id | int | Null:NO | Key:PRI | Default:null | Extra:auto_increment
+  certification_id | int | Null:NO | Key:UNI | Default:null | Extra:
+  certification_name | varchar(255) | Null:NO | Key:MUL | Default:null | Extra:
+  certification_code | varchar(100) | Null:NO | Key:UNI | Default:null | Extra:
+  issuing_organization | varchar(255) | Null:NO | Key: | Default:null | Extra:
+  certification_type | varchar(100) | Null:YES | Key: | Default:General | Extra:
+  mode | varchar(50) | Null:YES | Key: | Default:Online | Extra:
+  validity_period_value | int | Null:YES | Key: | Default:0 | Extra:
+  validity_period_unit | varchar(20) | Null:YES | Key: | Default:Years | Extra:
+  is_lifetime | tinyint(1) | Null:YES | Key: | Default:null | Extra:
+  created_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED
+  updated_at | datetime | Null:YES | Key: | Default:CURRENT_TIMESTAMP | Extra:DEFAULT_GENERATED on update CURRENT_TIMESTAMP

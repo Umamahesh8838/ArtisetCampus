@@ -1,0 +1,69 @@
+﻿
+tbl_cp_mcountries:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: country_id (int)
+  NOT NULL no default: country_name (varchar(100))
+  NOT NULL no default: country_code (varchar(5))
+
+tbl_cp_mstates:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: state_id (int)
+  NOT NULL no default: state_name (varchar(100))
+  NOT NULL no default: country_id (int)
+
+tbl_cp_mcities:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: city_id (int)
+  NOT NULL no default: city_name (varchar(100))
+  NOT NULL no default: state_id (int)
+
+tbl_cp_mpincodes:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: pincode_id (int)
+  NOT NULL no default: pincode (varchar(20))
+  NOT NULL no default: city_id (int)
+
+tbl_cp_mcolleges:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: college_id (int)
+  NOT NULL no default: college_name (varchar(255))
+
+tbl_cp_mcourses:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: course_id (int)
+  NOT NULL no default: course_name (varchar(150))
+  NOT NULL no default: course_code (varchar(50))
+
+tbl_cp_minterests:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: interest_id (int)
+  NOT NULL no default: name (varchar(150))
+
+tbl_cp_mskills:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: skill_id (int)
+  NOT NULL no default: name (varchar(100))
+  NOT NULL no default: language_id (int)
+
+tbl_cp_mlanguages:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: language_id (int)
+  NOT NULL no default: language_code (varchar(20))
+  NOT NULL no default: language_name (varchar(100))
+
+tbl_cp_mcertifications:
+  PK: row_id (int)
+  AUTO_INCREMENT: row_id
+  NOT NULL no default: certification_id (int)
+  NOT NULL no default: certification_name (varchar(255))
+  NOT NULL no default: certification_code (varchar(100))
+  NOT NULL no default: issuing_organization (varchar(255))
