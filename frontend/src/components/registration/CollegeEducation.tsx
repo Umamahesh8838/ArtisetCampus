@@ -11,7 +11,22 @@ const YEARS = Array.from({ length: 15 }, (_, i) => String(2015 + i));
 const REQUIRED = ['college', 'course', 'startYear', 'endYear'];
 
 const CollegeEducation = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.college) {
+      setData(prev => ({
+        ...prev,
+        college: resumeData.college.college || prev.college,
+        course: resumeData.college.course || prev.course,
+        specialization: resumeData.college.specialization || prev.specialization,
+        startYear: resumeData.college.startYear || prev.startYear,
+        endYear: resumeData.college.endYear || prev.endYear,
+        cgpa: resumeData.college.cgpa || prev.cgpa,
+        percentage: resumeData.college.percentage || prev.percentage,
+      }));
+    }
+  }, [resumeData]);
 
   const [data, setData] = useState({
     college: '', course: '', specialization: '',
@@ -113,7 +128,7 @@ const CollegeEducation = () => {
         </div>
       </div>
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("College education saved!"); updateDraftAndGoNext('college', data); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("College education saved!"); updateDraftAndGoNext('college', data); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

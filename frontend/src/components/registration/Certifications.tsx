@@ -22,7 +22,17 @@ const getExpiryStatus = (cert: Certification) => {
 };
 
 const Certifications = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.certifications) {
+      setCerts(resumeData.certifications.map((c: any) => ({
+        ...c,
+        id: c.id || crypto.randomUUID(),
+        verified: c.verified !== undefined ? c.verified : false
+      })) as Certification[]);
+    }
+  }, [resumeData]);
   const navigate = useNavigate();
 
   const [certs, setCerts] = useState<Certification[]>(draftData.certifications || []);
@@ -114,7 +124,7 @@ const Certifications = () => {
       </Button>
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Submitting Registration..."); updateDraftAndGoNext('certifications', certs); }} className="px-8">Submit Registration</Button>
+        <Button onClick={() => { updateDraftAndGoNext('certifications', certs); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Finish Section'}</Button>
       </div>
     </div>
   );

@@ -5,10 +5,10 @@ import { useRegistration } from "@/contexts/RegistrationContext";
 import { toast } from "sonner";
 import { Upload, FileText, Sparkles, X, Loader2 } from "lucide-react";
 
-const RESUME_API_URL = "https://your-friends-api.com/parse-resume"; // Replace with actual API
+const RESUME_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000") + "/resume/parse-preview";
 
 const ResumeUploader = () => {
-  const { setResumeData } = useRegistration();
+  const { setResumeData, setDraftDataDirect, openSection } = useRegistration();
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -40,24 +40,191 @@ const ResumeUploader = () => {
     }
 
     setParsing(true);
+    const loadingToastId = toast.loading("Parsing your resume... this may take several minutes");
     try {
+      const token = localStorage.getItem('authToken');
       const formData = new FormData();
-      formData.append("resume", file);
+      formData.append("file", file);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 minutes
 
       const response = await fetch(RESUME_API_URL, {
         method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) throw new Error("Failed to parse resume");
 
       const data = await response.json();
-      setResumeData({ ...data, resumeFileName: file.name });
+      const parsedDraft = data.draft || data.parsed || {};
+      const resumeHash = data.resume_hash || null;
+      
+      // Merge parsed resume data into resumeData for auto-fill
+      const basic = parsedDraft.basic || {};
+
+      const schoolEducation = parsedDraft.schoolEducation || [];
+      const tenthObj = schoolEducation.find((s: any) => String(s.standard).includes('10')) || {};
+      const twelfthObj = schoolEducation.find((s: any) => String(s.standard).includes('12')) || {};
+
+      const school = {
+        tenth: {
+          board: "",
+          school: tenthObj.schoolName || tenthObj.board || "",
+          percentage: tenthObj.percentage || undefined,
+          year: tenthObj.passingYear ? String(tenthObj.passingYear) : "",
+        },
+        twelfth: {
+          board: "",
+          school: twelfthObj.schoolName || twelfthObj.board || "",
+          percentage: twelfthObj.percentage || undefined,
+          year: twelfthObj.passingYear ? String(twelfthObj.passingYear) : "",
+        }
+      };
+
+      const collegeEducation = parsedDraft.collegeEducation || [];
+      const latestCollege = collegeEducation[0] || {};
+      const college = {
+        institution: latestCollege.collegeName || "",
+        degree: latestCollege.courseName || "",
+        branch: latestCollege.specializationName || "",
+        cgpa: latestCollege.cgpa || undefined,
+        startYear: latestCollege.startYear ? String(latestCollege.startYear) : "",
+        endYear: latestCollege.endYear ? String(latestCollege.endYear) : "",
+      };
+
+      const addr = parsedDraft.address || {};
+      const address = {
+        current: {
+          line1: addr.addressLine1 || "",
+          line2: addr.addressLine2 || "",
+          city: addr.cityName || "",
+          state: addr.stateName || "",
+          pincode: addr.pincode ? String(addr.pincode) : "",
+          country: addr.countryName || "",
+        }
+      };
+
+      const workExperience = (parsedDraft.workExperience || []).map((w: any) => ({
+        company: w.companyName || "",
+        designation: w.designation || "",
+        location: w.location || "",
+        type: w.employmentType || "",
+        startDate: w.startDate || "",
+        endDate: w.endDate || "",
+        current: !!w.isCurrent,
+      }));
+
+      const projects = (parsedDraft.projects || []).map((p: any) => ({
+        title: p.title || "",
+        description: p.description || "",
+        achievements: p.achievements || "",
+        startDate: p.startDate || "",
+        endDate: p.endDate || "",
+        skills: p.skillsUsed || [],
+      }));
+
+      const skills = (parsedDraft.skills || []).map((s: any) => ({
+        name: s.skillName || "",
+        version: "",
+        complexity: s.proficiencyLevel || "",
+      }));
+
+      const languages = (parsedDraft.languages || []).map((l: any) => ({
+        name: l.languageName || "",
+        proficiency: "",
+      }));
+
+      const certifications = (parsedDraft.certifications || []).map((c: any) => ({
+        name: c.certificationName || "",
+        issuer: c.issuingOrganization || "",
+        date: c.issueDate || "",
+        expiry: c.expiryDate || "",
+        url: c.certificateUrl || "",
+      }));
+
+      const interests = (parsedDraft.interests || []).map((i: any) => i.interestName).filter(Boolean);
+
+      setResumeData({
+        firstName: basic.firstName || basic.first_name,
+        middleName: basic.middleName || basic.middle_name,
+        lastName: basic.lastName || basic.last_name,
+        email: basic.email,
+        contactNumber: basic.contactNumber || basic.phone || basic.contact_number,
+        gender: basic.gender,
+        dob: basic.dateOfBirth || basic.dob,
+        linkedIn: basic.linkedinUrl || basic.linkedin_url,
+        github: basic.githubUrl || basic.github_url,
+        city: basic.currentCity || basic.city,
+        resumeFileName: file.name,
+        address,
+        school,
+        college,
+        workExperience,
+        projects,
+        skills,
+        languages,
+        certifications,
+        interests,
+      });
+
+      const mappedDraft = {
+        basic: {
+          firstName: basic.firstName || basic.first_name || "",
+          middleName: basic.middleName || basic.middle_name || "",
+          lastName: basic.lastName || basic.last_name || "",
+          email: basic.email || "",
+          contactNumber: basic.contactNumber || basic.phone || basic.contact_number || "",
+          gender: basic.gender || "",
+          dob: basic.dateOfBirth || basic.dob || "",
+          linkedIn: basic.linkedinUrl || basic.linkedin_url || "",
+          github: basic.githubUrl || basic.github_url || "",
+          city: basic.currentCity || basic.city || ""
+        },
+        address,
+        school,
+        college: {
+          college: college.institution,
+          course: college.degree,
+          specialization: college.branch,
+          cgpa: String(college.cgpa || ""),
+          percentage: "",
+          startYear: college.startYear,
+          endYear: college.endYear
+        },
+        semesters: [],
+        work: workExperience,
+        projects,
+        skills,
+        languages,
+        certifications,
+        interests
+      };
+
+      setDraftDataDirect(mappedDraft);
+      
+      // Auto-commit draft to backend so a manual refresh doesn't destroy the auto-fill
+      try {
+        const client = (await import("@/api/client")).default;
+        await client.put('/auth/registration/draft', { draft: mappedDraft, step: openSection || 'basic' });
+      } catch (e) {
+        console.error('Failed to auto-save draft to backend:', e);
+      }
       setParsed(true);
+      toast.dismiss(loadingToastId);
       toast.success("Resume parsed! Fields have been auto-filled. Please review and complete any missing information.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Resume parsing error:", error);
-      toast.error("Failed to parse resume. Please fill the form manually or try again.");
+      toast.dismiss(loadingToastId);
+      if (error.name === 'AbortError') {
+        toast.error("Resume parsing took too long (over 30 minutes). Please try again or fill the form manually.");
+      } else {
+        toast.error("Failed to parse resume. Please fill the form manually or try again.");
+      }
     } finally {
       setParsing(false);
     }

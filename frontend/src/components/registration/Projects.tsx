@@ -13,14 +13,38 @@ interface Project {
 }
 
 const Projects = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.projects && Array.isArray(resumeData.projects)) {
+      setProjects(resumeData.projects.map(p => ({
+        ...p,
+        id: (p as any).id || crypto.randomUUID(),
+        title: p.title || '',
+        description: p.description || '',
+        achievements: p.achievements || '',
+        startDate: p.startDate || '',
+        endDate: p.endDate || '',
+        skills: p.skills || []
+      })) as Project[]);
+    }
+  }, [resumeData]);
 
   const [projects, setProjects] = useState<Project[]>(draftData.projects || []);
   const [skillInputs, setSkillInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (draftData?.projects) {
-      setProjects(draftData.projects);
+    if (draftData?.projects && Array.isArray(draftData.projects)) {
+      setProjects(draftData.projects.map(p => ({
+        ...p,
+        id: p.id || crypto.randomUUID(),
+        title: p.title || '',
+        description: p.description || '',
+        achievements: p.achievements || '',
+        startDate: p.startDate || '',
+        endDate: p.endDate || '',
+        skills: p.skills || []
+      })));
     }
   }, [draftData?.projects]);
 
@@ -37,14 +61,16 @@ const Projects = () => {
 
   const addSkill = (idx: number) => {
     const skill = skillInputs[projects[idx].id]?.trim();
-    if (skill && !projects[idx].skills.includes(skill)) {
-      update(idx, 'skills', [...projects[idx].skills, skill]);
+    const currentSkills = projects[idx].skills || [];
+    if (skill && !currentSkills.includes(skill)) {
+      update(idx, 'skills', [...currentSkills, skill]);
       setSkillInputs(prev => ({ ...prev, [projects[idx].id]: '' }));
     }
   };
 
   const removeSkill = (idx: number, skill: string) => {
-    update(idx, 'skills', projects[idx].skills.filter(s => s !== skill));
+    const currentSkills = projects[idx].skills || [];
+    update(idx, 'skills', currentSkills.filter(s => s !== skill));
   };
 
   const getDuration = (p: Project) => {
@@ -103,7 +129,7 @@ const Projects = () => {
                 />
                 <Button variant="outline" size="sm" onClick={() => addSkill(idx)}>Add</Button>
               </div>
-              {proj.skills.length > 0 && (
+              {proj.skills?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {proj.skills.map(s => (
                     <span key={s} className="skill-tag">
@@ -123,7 +149,7 @@ const Projects = () => {
       </Button>
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Projects saved!"); updateDraftAndGoNext('projects', projects); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("Projects saved!"); updateDraftAndGoNext('projects', projects); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

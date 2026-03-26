@@ -17,7 +17,7 @@ const SectionWrapper = ({ value, title, icon, sectionId, children }: SectionWrap
   const isComplete = completion === 100;
 
   return (
-    <AccordionItem value={value} className="bg-card rounded-xl border border-border overflow-hidden">
+    <AccordionItem id={`section-${value}`} value={value} className="bg-card rounded-xl border border-border overflow-hidden">
       <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-accent/30 transition-colors">
         <div className="flex items-center justify-between w-full pr-4">
           <div className="flex items-center gap-3">

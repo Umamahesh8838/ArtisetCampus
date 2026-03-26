@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
+const resumeRoutes = require('./routes/resumeRoutes');
 const { initDb } = require('./config/db');
 const logger = require('./utils/logger');
 
@@ -37,6 +38,8 @@ app.use('/auth', authRoutes);
 app.use('/student', require('./routes/studentRoutes'));
 app.use('/users', require('./routes/userRoutes'));
 app.use('/companies', require('./routes/companyRoutes'));
+// Resume parser proxy routes
+app.use('/resume', resumeRoutes);
 
 const PORT = process.env.PORT || 3000;
 

@@ -16,7 +16,16 @@ interface Experience {
 const TYPES = ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Contract'];
 
 const WorkExperience = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.workExperience) {
+      setExperiences(resumeData.workExperience.map((e: any) => ({
+        ...e,
+        id: e.id || crypto.randomUUID()
+      })) as Experience[]);
+    }
+  }, [resumeData]);
   const [experiences, setExperiences] = useState<Experience[]>(draftData.work || []);
 
   const add = () => setExperiences(prev => [...prev, {
@@ -117,7 +126,7 @@ const WorkExperience = () => {
       </Button>
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Work experience saved!"); updateDraftAndGoNext('work', experiences); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("Work experience saved!"); updateDraftAndGoNext('work', experiences); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

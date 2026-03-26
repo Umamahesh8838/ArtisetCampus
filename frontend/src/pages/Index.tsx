@@ -19,8 +19,10 @@ import {
   Briefcase, FolderKanban, Code2, Globe, Heart, Award,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 const RegistrationContent = () => {
-  const { openSection, setOpenSection } = useRegistration();
+  const { openSection, setOpenSection, completedSections, totalSections, submitRegistration } = useRegistration();
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,6 +83,20 @@ const RegistrationContent = () => {
             <Certifications />
           </SectionWrapper>
         </Accordion>
+
+        {/* Global Submit Action */}
+        <div className="pt-8 pb-12 flex flex-col items-center border-t border-border mt-8">
+          <h3 className="font-display font-semibold text-xl text-foreground mb-2">Ready to complete your profile?</h3>
+          <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">Make sure all required sections are completed before submitting your registration.</p>
+          <Button 
+            onClick={submitRegistration} 
+            className="w-full sm:w-auto h-12 px-8 text-base font-semibold shadow-md active:scale-95 transition-all"
+          >
+            {completedSections < totalSections 
+              ? `Complete Registration (${completedSections}/${totalSections})` 
+              : 'Complete Registration'}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -88,7 +104,7 @@ const RegistrationContent = () => {
 
 const Index = () => {
   return (
-    <RegistrationProvider>
+    <RegistrationProvider mode="registration">
       <RegistrationContent />
     </RegistrationProvider>
   );

@@ -8,7 +8,13 @@ import { Plus, X } from "lucide-react";
 const SUGGESTIONS = ['Machine Learning', 'Web Development', 'Data Science', 'Cloud Computing', 'Cybersecurity', 'Mobile Development', 'UI/UX Design', 'Blockchain', 'IoT', 'DevOps', 'Game Development', 'AR/VR'];
 
 const Interests = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.interests) {
+      setInterests(resumeData.interests as string[]);
+    }
+  }, [resumeData]);
 
   const [interests, setInterests] = useState<string[]>(draftData.interests || []);
   const [custom, setCustom] = useState('');
@@ -67,7 +73,7 @@ const Interests = () => {
       )}
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Interests saved!"); updateDraftAndGoNext('interests', interests); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("Interests saved!"); updateDraftAndGoNext('interests', interests); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

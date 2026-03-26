@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const REQUIRED = ['firstName', 'lastName', 'email', 'contactNumber', 'gender', 'dob'];
 
 const BasicProfile = () => {
-  const { updateSectionCompletion, updateProfilePreview, updateDraftAndGoNext, resumeData, draftData } = useRegistration();
+  const { updateSectionCompletion, updateProfilePreview, updateDraftAndGoNext, resumeData, draftData , mode } = useRegistration();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [data, setData] = useState(() => {
@@ -30,6 +30,7 @@ const BasicProfile = () => {
   });
 
   const [emailError, setEmailError] = useState('');
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   // Keep local state in sync if draftData.basic arrives/updates after mount
   useEffect(() => {
@@ -87,7 +88,12 @@ const BasicProfile = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = (field: string, value: any) => setData(prev => ({ ...prev, [field]: value }));
+  const update = (field: string, value: any) => {
+    setData(prev => ({ ...prev, [field]: value }));
+    if (value && missingFields.includes(field)) {
+      setMissingFields(prev => prev.filter(f => f !== field));
+    }
+  };
 
   useEffect(() => {
     const filled = REQUIRED.filter(f => {
@@ -172,16 +178,18 @@ const BasicProfile = () => {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="field-label">First Name <span className="field-required">*</span></label>
-            <Input value={data.firstName} onChange={e => update('firstName', e.target.value)} placeholder="First name" />
+            <label className="field-label" htmlFor="field-firstName">First Name <span className="field-required">*</span></label>
+            <Input id="field-firstName" value={data.firstName} onChange={e => update('firstName', e.target.value)} placeholder="First name" className={cn(missingFields.includes('firstName') && "border-destructive focus-visible:ring-destructive")} />
+            {missingFields.includes('firstName') && <p className="text-xs text-destructive mt-1">This field is required</p>}
           </div>
           <div className="space-y-1.5">
             <label className="field-label">Middle Name</label>
             <Input value={data.middleName} onChange={e => update('middleName', e.target.value)} placeholder="Middle name" />
           </div>
           <div className="space-y-1.5">
-            <label className="field-label">Last Name <span className="field-required">*</span></label>
-            <Input value={data.lastName} onChange={e => update('lastName', e.target.value)} placeholder="Last name" />
+            <label className="field-label" htmlFor="field-lastName">Last Name <span className="field-required">*</span></label>
+            <Input id="field-lastName" value={data.lastName} onChange={e => update('lastName', e.target.value)} placeholder="Last name" className={cn(missingFields.includes('lastName') && "border-destructive focus-visible:ring-destructive")} />
+            {missingFields.includes('lastName') && <p className="text-xs text-destructive mt-1">This field is required</p>}
           </div>
         </div>
       </div>
@@ -189,27 +197,28 @@ const BasicProfile = () => {
       {/* Contact Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <label className="field-label">Email <span className="field-required">*</span></label>
-          <Input type="email" value={data.email} onChange={e => update('email', e.target.value)} placeholder="your@email.com" className={cn(emailError && "border-destructive")} />
-          {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+          <label className="field-label" htmlFor="field-email">Email <span className="field-required">*</span></label>
+          <Input id="field-email" type="email" value={data.email} onChange={e => update('email', e.target.value)} placeholder="your@email.com" className={cn((emailError || missingFields.includes('email')) && "border-destructive focus-visible:ring-destructive")} />
+          {emailError ? <p className="text-xs text-destructive mt-1">{emailError}</p> : missingFields.includes('email') ? <p className="text-xs text-destructive mt-1">This field is required</p> : null}
         </div>
         <div className="space-y-1.5">
           <label className="field-label">Alternate Email</label>
           <Input type="email" value={data.alternateEmail} onChange={e => update('alternateEmail', e.target.value)} placeholder="alternate@email.com" />
         </div>
         <div className="space-y-1.5">
-          <label className="field-label">Contact Number <span className="field-required">*</span></label>
-          <Input value={data.contactNumber} onChange={e => update('contactNumber', e.target.value)} placeholder="+91 XXXXX XXXXX" />
+          <label className="field-label" htmlFor="field-contactNumber">Contact Number <span className="field-required">*</span></label>
+          <Input id="field-contactNumber" value={data.contactNumber} onChange={e => update('contactNumber', e.target.value)} placeholder="+91 XXXXX XXXXX" className={cn(missingFields.includes('contactNumber') && "border-destructive focus-visible:ring-destructive")} />
+          {missingFields.includes('contactNumber') && <p className="text-xs text-destructive mt-1">This field is required</p>}
         </div>
         <div className="space-y-1.5">
           <label className="field-label">Alternate Contact</label>
           <Input value={data.alternateContact} onChange={e => update('alternateContact', e.target.value)} placeholder="+91 XXXXX XXXXX" />
         </div>
         <div className="space-y-1.5">
-          <label className="field-label">Date of Birth <span className="field-required">*</span></label>
+          <label className="field-label" htmlFor="field-dob">Date of Birth <span className="field-required">*</span></label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !data.dob && "text-muted-foreground")}>
+              <Button id="field-dob" variant="outline" className={cn("w-full justify-start text-left font-normal", !data.dob && "text-muted-foreground", missingFields.includes('dob') && "border-destructive focus-visible:ring-destructive")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {data.dob ? format(data.dob, "PPP") : "Pick a date"}
               </Button>
@@ -222,17 +231,19 @@ const BasicProfile = () => {
               />
             </PopoverContent>
           </Popover>
+          {missingFields.includes('dob') && <p className="text-xs text-destructive mt-1">This field is required</p>}
         </div>
         <div className="space-y-1.5">
-          <label className="field-label">Gender <span className="field-required">*</span></label>
+          <label className="field-label" htmlFor="field-gender">Gender <span className="field-required">*</span></label>
           <Select value={data.gender} onValueChange={v => update('gender', v)}>
-            <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+            <SelectTrigger id="field-gender" className={cn(missingFields.includes('gender') && "border-destructive focus-visible:ring-destructive")}><SelectValue placeholder="Select gender" /></SelectTrigger>
             <SelectContent>
               {['Male', 'Female', 'Non-binary', 'Prefer not to say'].map(g => (
                 <SelectItem key={g} value={g}>{g}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {missingFields.includes('gender') && <p className="text-xs text-destructive mt-1">This field is required</p>}
         </div>
       </div>
 
@@ -265,7 +276,30 @@ const BasicProfile = () => {
 
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Basic details saved!"); updateDraftAndGoNext('basic', data); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => {
+          const missing = REQUIRED.filter(f => {
+            const v = data[f as keyof typeof data];
+            return v === '' || v === undefined || v === null;
+          });
+          if (missing.length > 0) {
+            setMissingFields(missing);
+            toast.error("Please fill all required fields");
+            setTimeout(() => {
+              const el = document.getElementById(`field-${missing[0]}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.focus();
+              }
+            }, 100);
+            return;
+          }
+          if (emailError) {
+            toast.error("Please fix email format before proceeding");
+            return;
+          }
+          toast.success("Basic details saved!");
+          updateDraftAndGoNext('basic', data);
+        }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

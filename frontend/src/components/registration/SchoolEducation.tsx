@@ -55,7 +55,14 @@ const SchoolCard = ({ title, data, onChange }: {
 );
 
 const SchoolEducation = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.school) {
+      if (resumeData.school.tenth) setTenth(resumeData.school.tenth as any);
+      if (resumeData.school.twelfth) setTwelfth(resumeData.school.twelfth as any);
+    }
+  }, [resumeData]);
 
   const [tenth, setTenth] = useState(draftData.school?.tenth || { board: '', school: '', percentage: 0, year: '' });
   const [twelfth, setTwelfth] = useState(draftData.school?.twelfth || { board: '', school: '', percentage: 0, year: '' });
@@ -84,7 +91,7 @@ const SchoolEducation = () => {
         <SchoolCard title="12th Standard" data={twelfth} onChange={updateTwelfth} />
       </div>
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("School education saved!"); updateDraftAndGoNext('school', { tenth, twelfth }); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("School education saved!"); updateDraftAndGoNext('school', { tenth, twelfth }); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

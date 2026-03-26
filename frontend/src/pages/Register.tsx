@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { GraduationCap, Mail, ShieldCheck, Loader2, Phone } from "lucide-react";
+import { GraduationCap, Mail, ShieldCheck, Loader2, Phone, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const API_BASE = "http://localhost:3000";
 const OTP_LENGTH = 6;
@@ -12,6 +13,8 @@ const RESEND_COOLDOWN = 30;
 const Register = () => {
   const navigate = useNavigate();
 
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+
   // Form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -19,6 +22,8 @@ const Register = () => {
   const [contactNumber, setContactNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Step state - Email
   const [emailOtpSent, setEmailOtpSent] = useState(false);
@@ -65,14 +70,21 @@ const Register = () => {
 
   // ---------------- EMAIL OTP ----------------
   const handleSendEmailOtp = async () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast.error("Please fill in first name, last name, and email before continuing");
+    const newMissing: string[] = [];
+    if (!firstName.trim()) newMissing.push("firstName");
+    if (!lastName.trim()) newMissing.push("lastName");
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) newMissing.push("email");
+    
+    if (newMissing.length > 0) {
+      setMissingFields(prev => [...new Set([...prev, ...newMissing])]);
+      toast.error("Please fill in first name, last name, and a valid email before continuing");
+      setTimeout(() => {
+        const firstMissingId = `field-${newMissing[0]}`;
+        document.getElementById(firstMissingId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
+
     setSendingEmailOtp(true);
     try {
       const res = await fetch(`${API_BASE}/auth/send-email-otp`, {
@@ -121,8 +133,14 @@ const Register = () => {
 
   // ---------------- PHONE OTP ----------------
   const handleSendPhoneOtp = async () => {
-    if (!contactNumber.trim()) {
-      toast.error("Please enter a phone number");
+    const newMissing: string[] = [];
+    if (!contactNumber.trim() || !/^\d{10}$/.test(contactNumber)) {
+      newMissing.push("contactNumber");
+      setMissingFields(prev => [...new Set([...prev, ...newMissing])]);
+      toast.error("Please enter a valid 10-digit phone number");
+      setTimeout(() => {
+        document.getElementById("field-contactNumber")?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
     setSendingPhoneOtp(true);
@@ -174,12 +192,28 @@ const Register = () => {
   // ---------------- SIGNUP ----------------
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailOtpVerified || !phoneOtpVerified) {
-      toast.error("Please verify both email and phone before signing up");
+
+    const newMissing: string[] = [];
+    if (!firstName.trim()) newMissing.push("firstName");
+    if (!lastName.trim()) newMissing.push("lastName");
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) newMissing.push("email");
+    if (!contactNumber.trim() || !/^\d{10}$/.test(contactNumber)) newMissing.push("contactNumber");
+    if (!password.trim()) newMissing.push("password");
+    if (!confirmPassword.trim()) newMissing.push("confirmPassword");
+
+    if (newMissing.length > 0) {
+      setMissingFields(newMissing);
+      toast.error("Please fill in all required fields correctly.");
+      setTimeout(() => {
+        const firstMissingId = `field-${newMissing[0]}`;
+        document.getElementById(firstMissingId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
-    if (!password.trim() || !confirmPassword.trim()) {
-      toast.error("Please fill in the password fields");
+    setMissingFields([]);
+
+    if (!emailOtpVerified || !phoneOtpVerified) {
+      toast.error("Please verify both email and phone before signing up");
       return;
     }
     if (password !== confirmPassword) {
@@ -300,41 +334,55 @@ const Register = () => {
                 {/* Name */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[13px] font-medium text-foreground">First Name</label>
+                    <label className="text-[13px] font-medium text-foreground">First Name</label>  
                     <Input
+                      id="field-firstName"
                       value={firstName}
-                      onChange={e => setFirstName(e.target.value)}
+                      onChange={e => {
+                        setFirstName(e.target.value);
+                        if (missingFields.includes('firstName')) setMissingFields(prev => prev.filter(f => f !== 'firstName'));
+                      }}
                       placeholder="John"
-                      className="h-10 text-sm"
+                      className={cn("h-10 text-sm", missingFields.includes('firstName') && "border-destructive focus-visible:ring-destructive")}
                       disabled={emailOtpSent}
                     />
+                    {missingFields.includes('firstName') && <p className="text-[11px] text-destructive">First name is required</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[13px] font-medium text-foreground">Last Name</label>
+                    <label className="text-[13px] font-medium text-foreground">Last Name</label>   
                     <Input
+                      id="field-lastName"
                       value={lastName}
-                      onChange={e => setLastName(e.target.value)}
+                      onChange={e => {
+                        setLastName(e.target.value);
+                        if (missingFields.includes('lastName')) setMissingFields(prev => prev.filter(f => f !== 'lastName'));
+                      }}
                       placeholder="Doe"
-                      className="h-10 text-sm"
+                      className={cn("h-10 text-sm", missingFields.includes('lastName') && "border-destructive focus-visible:ring-destructive")}
                       disabled={emailOtpSent}
                     />
+                    {missingFields.includes('lastName') && <p className="text-[11px] text-destructive">Last name is required</p>}
                   </div>
                 </div>
 
-                {/* Email */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-medium text-foreground flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5" /> Email Address
-                  </label>
-                  {!emailOtpVerified ? (
+                {/* Email & OTP */}
+                <div className="space-y-3 p-3.5 bg-accent/40 rounded-xl border border-border/50">
+                  <div className="space-y-1.5 pt-0">
+                    <label className="text-[13px] font-medium text-foreground flex items-center justify-between">
+                      Email Address
+                      {emailOtpVerified && <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full"><CheckCircle2 className="w-3.5 h-3.5"/> Verified</span>}
+                    </label>
                     <div className="flex gap-2">
                       <Input
-                        type="email"
+                        id="field-email"
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="h-10 text-sm flex-1"
-                        disabled={emailOtpSent}
+                        onChange={e => {
+                          setEmail(e.target.value);
+                          if (missingFields.includes('email')) setMissingFields(prev => prev.filter(f => f !== 'email'));
+                        }}
+                        placeholder="john.doe@example.com"
+                        className={cn("h-10 text-sm bg-background flex-1", missingFields.includes('email') && "border-destructive focus-visible:ring-destructive")}
+                        disabled={emailOtpSent || emailOtpVerified}
                       />
                       <Button
                         type="button"
@@ -354,15 +402,7 @@ const Register = () => {
                         )}
                       </Button>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between p-2 rounded-lg border border-green-200 bg-green-50/50 dark:border-green-900/50 dark:bg-green-900/10">
-                      <span className="text-sm text-foreground/80">{email}</span>
-                      <div className="flex items-center gap-1 text-green-600 dark:text-green-500">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span className="text-xs font-medium">Verified</span>
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {emailOtpSent && !emailOtpVerified && (
                     <div className="pt-2 animate-in fade-in slide-in-from-top-2">
@@ -404,12 +444,16 @@ const Register = () => {
                   {!phoneOtpVerified ? (
                     <div className="flex gap-2">
                       <Input
-                        type="tel"
+                        id="field-contactNumber"
                         value={contactNumber}
-                        onChange={e => setContactNumber(e.target.value)}
+                        onChange={e => {
+                          setContactNumber(e.target.value);
+                          if (missingFields.includes('contactNumber')) setMissingFields(prev => prev.filter(f => f !== 'contactNumber'));
+                        }}
                         placeholder="9876543210"
-                        className="h-10 text-sm flex-1"
-                        disabled={phoneOtpSent || !emailOtpVerified}
+                        className={cn("h-10 text-sm bg-background pl-14", missingFields.includes('contactNumber') && "border-destructive focus-visible:ring-destructive")}
+                        disabled={phoneOtpSent || phoneOtpVerified || !emailOtpVerified}
+                        maxLength={10}
                       />
                       <Button
                         type="button"
@@ -471,28 +515,56 @@ const Register = () => {
                   )}
                 </div>
 
-                {/* Password (Unlocks after Phone) */}
+                {/* Passwords */}
                 {phoneOtpVerified && (
-                  <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in slide-in-from-top-2">
-                    <div className="space-y-1">
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1 relative">
                       <label className="text-[13px] font-medium text-foreground">Password</label>
                       <Input
-                        type="password"
+                        id="field-password"
+                        type={showPassword ? "text" : "password"}
                         value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={e => {
+                          setPassword(e.target.value);
+                          if (missingFields.includes('password')) setMissingFields(prev => prev.filter(f => f !== 'password'));
+                        }}
                         placeholder="••••••••"
-                        className="h-10 text-sm"
+                        className={cn("h-10 text-sm pr-9", missingFields.includes('password') && "border-destructive focus-visible:ring-destructive")}
+                        disabled={!emailOtpVerified || !phoneOtpVerified}
                       />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-[30px] text-muted-foreground hover:text-foreground transition-colors"
+                        disabled={!emailOtpVerified || !phoneOtpVerified}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      {missingFields.includes('password') && <p className="text-[11px] text-destructive">Password is required</p>}
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[13px] font-medium text-foreground">Confirm</label>
+                    <div className="space-y-1 relative">
+                      <label className="text-[13px] font-medium text-foreground">Confirm Password</label>
                       <Input
-                        type="password"
+                        id="field-confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
                         value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
+                        onChange={e => {
+                          setConfirmPassword(e.target.value);
+                          if (missingFields.includes('confirmPassword')) setMissingFields(prev => prev.filter(f => f !== 'confirmPassword'));
+                        }}
                         placeholder="••••••••"
-                        className="h-10 text-sm"
+                        className={cn("h-10 text-sm pr-9", missingFields.includes('confirmPassword') && "border-destructive focus-visible:ring-destructive")}
+                        disabled={!emailOtpVerified || !phoneOtpVerified}
                       />
+                      <button 
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2.5 top-[30px] text-muted-foreground hover:text-foreground transition-colors"
+                        disabled={!emailOtpVerified || !phoneOtpVerified}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      {missingFields.includes('confirmPassword') && <p className="text-[11px] text-destructive">Confirm password is required</p>}
                     </div>
                   </div>
                 )}

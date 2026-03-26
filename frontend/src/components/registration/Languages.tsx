@@ -8,14 +8,20 @@ import { Plus, X } from "lucide-react";
 const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Gujarati', 'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Japanese', 'Mandarin'];
 
 const Languages = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
 
-  const [languages, setLanguages] = useState<string[]>(draftData.languages || []);
+  useEffect(() => {
+    if (resumeData?.languages && Array.isArray(resumeData.languages)) {
+      setLanguages(resumeData.languages.map((l: any) => typeof l === 'string' ? l : l.name).filter(Boolean) as string[]);
+    }
+  }, [resumeData]);
+
+  const [languages, setLanguages] = useState<string[]>(Array.isArray(draftData.languages) ? (draftData.languages.map(l => typeof l === 'string' ? l : l.name).filter(Boolean) as string[]) : []);
   const [selected, setSelected] = useState('');
 
   useEffect(() => {
-    if (draftData?.languages) {
-      setLanguages(draftData.languages);
+    if (draftData?.languages && Array.isArray(draftData.languages)) {
+      setLanguages(draftData.languages.map(l => typeof l === 'string' ? l : l.name).filter(Boolean) as string[]);
     }
   }, [draftData?.languages]);
 
@@ -63,7 +69,10 @@ const Languages = () => {
       )}
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Languages saved!"); updateDraftAndGoNext('languages', languages); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { 
+          toast.success("Languages saved!"); 
+          updateDraftAndGoNext('languages', languages.map(l => ({ name: l }))); 
+        }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

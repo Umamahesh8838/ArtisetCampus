@@ -26,59 +26,66 @@ const AddressFields = ({ data, onChange, type }: { data: ReturnType<typeof empty
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
         <label className="field-label">Address Line 1 <span className="field-required">*</span></label>
-        <Input value={data.line1} onChange={e => onChange('line1', e.target.value)} placeholder="Street address" />
+        <Input value={data.line1 || ""} onChange={e => onChange('line1', e.target.value)} placeholder="Street address" />
       </div>
       <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
         <label className="field-label">Address Line 2</label>
-        <Input value={data.line2} onChange={e => onChange('line2', e.target.value)} placeholder="Apartment, suite, etc." />
+        <Input value={data.line2 || ""} onChange={e => onChange('line2', e.target.value)} placeholder="Apartment, suite, etc." />
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Care Of</label>
-        <Input value={data.careOf} onChange={e => onChange('careOf', e.target.value)} placeholder="C/O" />
+        <Input value={data.careOf || ""} onChange={e => onChange('careOf', e.target.value)} placeholder="C/O" />
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Landmark</label>
-        <Input value={data.landmark} onChange={e => onChange('landmark', e.target.value)} placeholder="Near..." />
+        <Input value={data.landmark || ""} onChange={e => onChange('landmark', e.target.value)} placeholder="Near..." />
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Country <span className="field-required">*</span></label>
-        <Select value={data.country} onValueChange={v => onChange('country', v)}>
+        <Select value={data.country || ""} onValueChange={v => onChange('country', v)}>
           <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
           <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
         <label className="field-label">State <span className="field-required">*</span></label>
-        <Select value={data.state} onValueChange={v => onChange('state', v)}>
+        <Select value={data.state || ""} onValueChange={v => onChange('state', v)}>
           <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
           <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
         <label className="field-label">City <span className="field-required">*</span></label>
-        <Select value={data.city} onValueChange={v => onChange('city', v)}>
+        <Select value={data.city || ""} onValueChange={v => onChange('city', v)}>
           <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
           <SelectContent>{CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Pincode <span className="field-required">*</span></label>
-        <Input value={data.pincode} onChange={e => onChange('pincode', e.target.value)} placeholder="400001" />
+        <Input value={data.pincode || ""} onChange={e => onChange('pincode', e.target.value)} placeholder="400001" />
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Latitude</label>
-        <Input value={data.lat} readOnly className="bg-muted text-muted-foreground" />
+        <Input value={data.lat || ""} readOnly className="bg-muted text-muted-foreground" />
       </div>
       <div className="space-y-1.5">
         <label className="field-label">Longitude</label>
-        <Input value={data.lng} readOnly className="bg-muted text-muted-foreground" />
+        <Input value={data.lng || ""} readOnly className="bg-muted text-muted-foreground" />
       </div>
     </div>
   </div>
 );
 
 const AddressDetails = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData, updateDraftData, goToNextStep, goToPreviousStep } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, goToNextSection, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.address) {
+      if (resumeData.address.current) setCurrent(resumeData.address.current as any);
+      if (resumeData.address.permanent) setPermanent(resumeData.address.permanent as any);
+    }
+  }, [resumeData]);
 
   const [current, setCurrent] = useState(draftData.address?.current || emptyAddress());
   const [permanent, setPermanent] = useState(draftData.address?.permanent || emptyAddress());
@@ -131,7 +138,7 @@ const AddressDetails = () => {
         </AccordionItem>
       </Accordion>
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Address saved!"); updateDraftAndGoNext('address', { current, permanent, sameAsCurrent }); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("Address saved!"); updateDraftAndGoNext('address', { current, permanent, sameAsCurrent }); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

@@ -19,7 +19,17 @@ const PROFICIENCY_COLOR: Record<string, string> = {
 };
 
 const Skills = () => {
-  const { updateSectionCompletion, updateDraftAndGoNext, draftData } = useRegistration();
+  const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
+
+  useEffect(() => {
+    if (resumeData?.skills) {
+      setSkills(resumeData.skills.map((s: any) => ({
+        ...s,
+        id: s.id || crypto.randomUUID(),
+        active: s.active !== undefined ? s.active : true
+      })) as Skill[]);
+    }
+  }, [resumeData]);
 
   const [skills, setSkills] = useState<Skill[]>(draftData.skills || []);
 
@@ -92,7 +102,7 @@ const Skills = () => {
       </Button>
 
       <div className="flex justify-end pt-4">
-        <Button onClick={() => { toast.success("Skills saved!"); updateDraftAndGoNext('skills', skills); }} className="px-8">Save & Continue</Button>
+        <Button onClick={() => { toast.success("Skills saved!"); updateDraftAndGoNext('skills', skills); }} className="px-8">{mode === 'profile' ? 'Save Changes' : 'Save & Continue'}</Button>
       </div>
     </div>
   );

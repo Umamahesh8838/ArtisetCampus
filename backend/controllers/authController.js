@@ -273,6 +273,21 @@ async function submitRegistration(req, res) {
 
     await connection.commit();
     connection.release();
+    // After successful registration, attempt to notify the resume parser to save confirmed resume if present.
+    try {
+      const resumeHash = draft && (draft.resume_hash || draft.resumeHash || draft.hash);
+      if (resumeHash) {
+        // Fire-and-forget; do not block main response
+        const axios = require('axios');
+        axios.post('http://127.0.0.1:3000/resume/save-confirmed', { resume_hash: resumeHash, parsed_data: draft }, { timeout: 10000 })
+          .catch(err => {
+            logger.warn('Failed to call resume save-confirmed:', err.message || err);
+          });
+      }
+    } catch (e) {
+      logger.warn('Error while attempting to save confirmed resume:', e.message || e);
+    }
+
     return res.json({ message: 'Registration submitted successfully' });
 
   } catch (err) {

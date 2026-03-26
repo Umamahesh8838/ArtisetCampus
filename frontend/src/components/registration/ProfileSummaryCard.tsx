@@ -3,7 +3,7 @@ import { User, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ProfileSummaryCard = () => {
-  const { profilePreview, overallProgress, sectionCompletion } = useRegistration();
+  const { profilePreview, overallProgress, sectionCompletion , mode } = useRegistration();
   const circumference = 2 * Math.PI * 52;
   const strokeDashoffset = circumference - (overallProgress / 100) * circumference;
 

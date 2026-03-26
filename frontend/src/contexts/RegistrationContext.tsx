@@ -31,7 +31,7 @@ export interface ResumeData {
     twelfth?: { board?: string; school?: string; percentage?: number; year?: string };
   };
   college?: {
-    institution?: string; degree?: string; branch?: string; cgpa?: number;
+    college?: string; course?: string; specialization?: string; cgpa?: string; percentage?: string;
     startYear?: string; endYear?: string;
   };
   workExperience?: Array<{
@@ -65,14 +65,17 @@ interface RegistrationContextType {
   resumeData: ResumeData | null;
   setResumeData: (data: ResumeData) => void;
   draftData: Record<string, any>;
+  setDraftDataDirect: (data: Record<string, any>) => void;
   updateDraftAndGoNext: (section: string, data: any) => void;
+  submitRegistration: () => void;
+  mode: 'registration' | 'profile';
 }
 
 const SECTIONS = ['basic', 'address', 'school', 'college', 'semesters', 'work', 'projects', 'skills', 'languages', 'interests', 'certifications'];
 
 const RegistrationContext = createContext<RegistrationContextType | undefined>(undefined);
 
-export const RegistrationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const RegistrationProvider: React.FC<{ children: React.ReactNode, mode?: 'registration' | 'profile' }> = ({ children, mode = 'registration' }) => {
   const [sectionCompletion, setSectionCompletion] = useState<Record<string, number>>(
     Object.fromEntries(SECTIONS.map(s => [s, 0]))
   );
@@ -138,24 +141,41 @@ export const RegistrationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const updateSectionCompletion = useCallback((sectionId: string, percentage: number) => {
-    setSectionCompletion(prev => ({ ...prev, [sectionId]: percentage }));
+    setSectionCompletion(prev => {
+      if (prev[sectionId] === percentage) return prev;
+      return { ...prev, [sectionId]: percentage };
+    });
   }, []);
 
   const updateProfilePreview = useCallback((data: Partial<ProfilePreview>) => {
-    setProfilePreview(prev => ({ ...prev, ...data }));
+    setProfilePreview(prev => {
+      let changed = false;
+      for (const key in data) {
+        if (data[key as keyof ProfilePreview] !== prev[key as keyof ProfilePreview]) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) return prev;
+      return { ...prev, ...data };
+    });
   }, []);
 
   const goToNextSection = useCallback(() => {
     if (!openSection) return;
     const idx = SECTIONS.indexOf(openSection);
-    if (idx < SECTIONS.length - 1) {
-      setOpenSection(SECTIONS[idx + 1]);
-    } else {
-      setOpenSection(undefined);
+    const nextSection = idx < SECTIONS.length - 1 ? SECTIONS[idx + 1] : undefined;
+    setOpenSection(nextSection);
+    
+    if (nextSection) {
+      setTimeout(() => {
+        const el = document.getElementById(`section-${nextSection}`);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 150);
     }
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
   }, [openSection]);
 
   const updateDraftAndGoNext = useCallback((section: string, data: any) => {
@@ -174,28 +194,49 @@ export const RegistrationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     if (token) {
+      client.put('/auth/registration/draft', { draft: newDraft, step: nextSectionId })
+        .catch(console.error);
+      
       if (nextSectionId === 'completed') {
-        toast.info("Submitting registration...", { id: 'reg-submit' });
-        client.post('/auth/registration/submit', { draft: newDraft })
-        .then(res => {
-          toast.success("Registration complete!", { id: 'reg-submit' });
-          localStorage.setItem('artiset_registration_complete', 'true');
-          window.location.href = '/student'; // Full redirect to home after success
-        })
-        .catch(err => {
-          console.error(err);
-          const errorMsg = err.response?.data?.message || err.message || "Failed to submit registration";
-          toast.error(errorMsg, { id: 'reg-submit' });
-        });
+        setOpenSection(undefined);
+        toast.success("Section saved successfully");
       } else {
-        client.put('/auth/registration/draft', { draft: newDraft, step: nextSectionId })
-          .catch(console.error);
-        goToNextSection();
+        if (mode === 'registration') {
+          goToNextSection();
+        } else {
+          // In Profile mode, we do NOT want the wizard auto-scrolling to the next section.
+          setOpenSection(undefined);
+          toast.success("Changes saved successfully");
+        }
       }
     } else {
-      goToNextSection();
+      if (mode === 'registration') goToNextSection();
     }
-  }, [goToNextSection, draftData]);
+  }, [goToNextSection, draftData, mode]);
+
+  const submitRegistration = useCallback(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error("You must be logged in to submit.");
+      return;
+    }
+    toast.info("Submitting registration...", { id: 'reg-submit' });
+    client.post('/auth/registration/submit', { draft: draftData })
+      .then(res => {
+        toast.success("Registration complete!", { id: 'reg-submit' });
+        localStorage.setItem('artiset_registration_complete', 'true');
+        window.location.href = '/student'; // Full redirect to home after success
+      })
+      .catch(err => {
+        console.error(err);
+        const errorMsg = err.response?.data?.message || err.message || "Failed to submit registration";
+        toast.error(errorMsg, { id: 'reg-submit' });
+      });
+  }, [draftData]);
+
+  const setDraftDataDirect = useCallback((data: Record<string, any>) => {
+    setDraftData(data);
+  }, []);
 
   const overallProgress = useMemo(() => {
     const values = Object.values(sectionCompletion);
@@ -221,7 +262,9 @@ export const RegistrationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       completedSections, totalSections: SECTIONS.length,
       profilePreview, updateProfilePreview,
       openSection, setOpenSection, goToNextSection,
-      resumeData, setResumeData, draftData, updateDraftAndGoNext
+      resumeData, setResumeData, draftData, setDraftDataDirect, updateDraftAndGoNext,
+      submitRegistration,
+      mode
     }}>
       {children}
     </RegistrationContext.Provider>
