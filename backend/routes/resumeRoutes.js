@@ -9,46 +9,91 @@ const logger = require('../utils/logger');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 function mapParserToDraft(parsed) {
-  const cleanNumber = (val) => {
-    if (!val) return 0;
-    if (typeof val === 'number') return val;
-    const str = String(val).replace('%', '').split('/')[0].trim();
-    return parseFloat(str) || 0;
-  };
+  try {
+    console.log("[MAPPER] Input parsed data keys:", Object.keys(parsed || {}));
+    
+    const cleanNumber = (val) => {
+      if (!val) return 0;
+      if (typeof val === 'number') return val;
+      const str = String(val).replace('%', '').split('/')[0].trim();
+      return parseFloat(str) || 0;
+    };
 
-  const result = {
-    basic: {
-      firstName: parsed?.first_name || '',
-      middleName: parsed?.middle_name || '',
-      lastName: parsed?.last_name || '',
-      email: parsed?.email || '',
-      phone: parsed?.contact_number || '',
-      linkedinUrl: parsed?.linkedin_url || '',
-      githubUrl: parsed?.github_url || '',
-      portfolioUrl: parsed?.portfolio_url || '',
-      dateOfBirth: parsed?.date_of_birth || '',
-      gender: parsed?.gender || '',
-      currentCity: parsed?.current_city || '',
-    },
-    schoolEducation: (parsed?.school || []).map((s) => ({
-      standard: s?.standard || '',
-      // The parser often puts school name in `board`; we prefer school_name, else fallback to board.
-      schoolName: s?.school_name || s?.board || '',
-      // Leave board empty so the student can choose; do not auto-fill with school name.
-      board: '',
-      percentage: cleanNumber(s?.percentage),
-      passingYear: cleanNumber(s?.passing_year),
-    })),
-    collegeEducation: (parsed?.education || []).map((e) => ({
-      collegeName: e?.college_name || '',
-      courseName: e?.course_name || '',
-      specializationName: e?.specialization_name || '',
-      startYear: cleanNumber(e?.start_year),
-      endYear: cleanNumber(e?.end_year),
-      cgpa: cleanNumber(e?.cgpa),
-      percentage: cleanNumber(e?.percentage),
-    })),
-    workExperience: (parsed?.workexp || []).map((w) => ({
+    // Try multiple possible field names for school and education
+    const schoolDataFromApi = parsed?.school || parsed?.schooling || parsed?.school_education || [];
+    const educationArray = parsed?.education || parsed?.college || parsed?.college_education || [];
+
+    console.log("[MAPPER] School array found:", Array.isArray(schoolDataFromApi) ? schoolDataFromApi.length : 'NOT AN ARRAY', schoolDataFromApi);
+    console.log("[MAPPER] Education array found:", Array.isArray(educationArray) ? educationArray.length : 'NOT AN ARRAY', educationArray);
+
+    // Build school array with standard field (for frontend compatibility)
+    const schoolArray = [];
+    if (Array.isArray(schoolDataFromApi) && schoolDataFromApi.length > 0) {
+      for (const s of schoolDataFromApi) {
+        console.log("[MAPPER] Processing school entry:", s);
+        const standard = String(s?.standard || s?.std || s?.class || '').toLowerCase().trim();
+        
+        let mappedStandard = '';
+        // Check for various formats: X, XII, 10, 12, Class X, etc.
+        if (standard.includes('x') && !standard.includes('xi')) {
+          // This is "X" (10th)
+          mappedStandard = '10th';
+        } else if (standard.includes('xii') || standard.includes('12')) {
+          // This is "XII" (12th)
+          mappedStandard = '12th';
+        } else if (standard === '10') {
+          mappedStandard = '10th';
+        } else if (standard === '12') {
+          mappedStandard = '12th';
+        }
+        
+        if (mappedStandard) {
+          schoolArray.push({
+            standard: mappedStandard,
+            schoolName: s?.school_name || s?.school || s?.institution_name || '',
+            board: s?.board || s?.board_name || s?.board_of_education || '',
+            percentage: cleanNumber(s?.percentage || s?.marks || s?.score),
+            passingYear: cleanNumber(s?.passing_year || s?.year || s?.year_of_passing),
+          });
+          console.log("[MAPPER] Added to school array:", { standard: mappedStandard, schoolName: s?.school_name });
+        }
+      }
+    }
+
+    // Build college array (in frontend format) - take first entry
+    const collegeArray = [];
+    if (Array.isArray(educationArray) && educationArray.length > 0) {
+      const e = educationArray[0];
+      console.log("[MAPPER] Processing college entry:", e);
+      collegeArray.push({
+        collegeName: e?.college_name || e?.college || e?.institution_name || e?.university || '',
+        courseName: e?.course_name || e?.course || e?.degree || e?.program || '',
+        specializationName: e?.specialization_name || e?.specialization || e?.major || '',
+        startYear: cleanNumber(e?.start_year || e?.from_year || e?.year_from),
+        endYear: cleanNumber(e?.end_year || e?.to_year || e?.year_to),
+        cgpa: cleanNumber(e?.cgpa || e?.gpa || e?.grade),
+        percentage: cleanNumber(e?.percentage || e?.marks || e?.score),
+      });
+      console.log("[MAPPER] College array:", collegeArray);
+    }
+
+    const result = {
+      basic: {
+        firstName: parsed?.first_name || parsed?.firstName || '',
+        middleName: parsed?.middle_name || parsed?.middleName || '',
+        lastName: parsed?.last_name || parsed?.lastName || '',
+        email: parsed?.email || '',
+        phone: parsed?.contact_number || parsed?.phone || '',
+        linkedinUrl: parsed?.linkedin_url || parsed?.linkedinUrl || '',
+        githubUrl: parsed?.github_url || parsed?.githubUrl || '',
+        portfolioUrl: parsed?.portfolio_url || parsed?.portfolioUrl || '',
+        dateOfBirth: parsed?.date_of_birth || parsed?.dob || '',
+        gender: parsed?.gender || '',
+        currentCity: parsed?.current_city || parsed?.city || '',
+      },
+      schoolEducation: schoolArray,  // Frontend mapper expects this field
+      collegeEducation: collegeArray, // Frontend mapper expects this field
+      workExperience: (parsed?.workexp || []).map((w) => ({
       companyName: w?.company_name || '',
       location: w?.company_location || '',
       designation: w?.designation || '',
@@ -102,6 +147,23 @@ function mapParserToDraft(parsed) {
   console.log(JSON.stringify(result, null, 2));
 
   return result;
+  } catch (mapError) {
+    console.error("[MAPPER] ERROR in mapping:", mapError.message);
+    console.error("[MAPPER] Error stack:", mapError.stack);
+    // Return a safe empty structure if mapping fails
+    return {
+      basic: {},
+      schoolEducation: [],
+      collegeEducation: [],
+      workExperience: [],
+      projects: [],
+      skills: [],
+      languages: [],
+      certifications: [],
+      interests: [],
+      address: {},
+    };
+  }
 }
 
 // Proxy and convert parser response
@@ -124,10 +186,10 @@ router.post('/parse-preview', authenticateToken, upload.single('file'), async (r
 
     console.log("[RESUME] Step 2: Calling resume parser at http://localhost:8000/resume/parse-preview");
 
-    console.log("[RESUME] Calling parser at http://127.0.0.1:8000...");
+    console.log("[RESUME] Calling parser at https://resume-parser-api-hp-260406.azurewebsites.net...");
     console.log("[RESUME] Waiting for Ollama response (may take 2-3 mins)...");
 
-    const resp = await axios.post('http://127.0.0.1:8000/resume/parse-preview', form, {
+    const resp = await axios.post('https://resume-parser-api-hp-260406.azurewebsites.net/resume/parse-preview', form, {
       headers: { ...form.getHeaders() },
       timeout: 300000, // 5 minutes
     });
@@ -136,17 +198,24 @@ router.post('/parse-preview', authenticateToken, upload.single('file'), async (r
     console.log("[RESUME] Parser response status:", resp.status);
 
     const parserResponse = resp.data || {};
-  console.log("[RESUME] Parser responded!");
-  console.log("[RESUME] Full parser response:", JSON.stringify(parserResponse.data, null, 2));
-    const parserData = parserResponse.data || {};
-    const parsedResume = parserData.parsed || {};
-    const resumeHash = parserData.resume_hash;
+    console.log("[RESUME] Parser responded!");
+    console.log("[RESUME] Full parser response keys:", Object.keys(parserResponse));
+    console.log("[RESUME] Full parser response:", JSON.stringify(parserResponse, null, 2));
+    
+    // The API response might be { success: boolean, data: { parsed: {...}, resume_hash: "..." } }
+    // or it might be { parsed: {...}, resume_hash: "..." } directly
+    const parserData = parserResponse.data || parserResponse;
+    const parsedResume = parserData.parsed || parserData;
+    const resumeHash = parserData.resume_hash || parserResponse.resume_hash;
 
-    console.log("[RESUME] Parser response data:", JSON.stringify(parserData, null, 2));
+    console.log("[RESUME] Parser data after extraction:", JSON.stringify(parserData, null, 2));
+    console.log("[RESUME] Parsed resume (to be mapped):", JSON.stringify(parsedResume, null, 2));
+    console.log("[RESUME] Resume hash:", resumeHash);
 
-    if (!parserResponse.success) {
-      console.error('Parser returned error:', parserResponse.error);
-      return res.status(400).json({ message: parserResponse.error || 'Failed to parse resume' });
+    // Check for explicit error flag (but don't fail if it's just missing)
+    if (parserResponse.error || parserResponse.message && parserResponse.message.includes('error')) {
+      console.error('Parser returned error:', parserResponse.error || parserResponse.message);
+      return res.status(400).json({ message: parserResponse.error || parserResponse.message || 'Failed to parse resume' });
     }
 
     // Map parser response to registration draft format
@@ -163,6 +232,7 @@ router.post('/parse-preview', authenticateToken, upload.single('file'), async (r
     return res.json({ success: true, resume_hash: resumeHash, draft: mappedDraft });
   } catch (error) {
     console.error("[RESUME] ERROR:", error.message);
+    console.error("[RESUME] Error stack:", error.stack);
     console.error("[RESUME] Error detail:", error.response?.data || error);
     return res.status(500).json({ 
       message: 'Failed to parse resume',
@@ -178,7 +248,7 @@ router.get('/get-cached/:hash', authenticateToken, async (req, res) => {
   try {
     const { hash } = req.params;
     console.log("[RESUME] Fetching cached resume for hash:", hash);
-    const response = await axios.get(`http://127.0.0.1:8000/resume/get-cached/${hash}`, { timeout: 60000 });
+    const response = await axios.get(`https://resume-parser-api-hp-260406.azurewebsites.net/resume/get-cached/${hash}`, { timeout: 60000 });
     return res.json(response.data);
   } catch (error) {
     console.error('[RESUME] ERROR fetching cached resume:', error.message);
@@ -194,7 +264,7 @@ router.post('/save-confirmed', authenticateToken, express.json(), async (req, re
 
     logger.info('Saving confirmed resume to parser:', body.resume_hash);
 
-    await axios.post('http://127.0.0.1:8000/resume/save-confirmed', body, { timeout: 1800000 });
+    await axios.post('https://resume-parser-api-hp-260406.azurewebsites.net/resume/save-confirmed', body, { timeout: 1800000 });
     logger.info('Resume saved to parser successfully');
     return res.json({ message: 'Saved to resume parser' });
   } catch (err) {
