@@ -1,0 +1,64 @@
+﻿Γ£à tbl_cp_student.salutation_id
+Γ£à tbl_cp_student.first_name
+Γ£à tbl_cp_student.last_name
+Γ£à tbl_cp_student.email
+Γ£à tbl_cp_student.contact_number
+Γ£à tbl_cp_student.date_of_birth
+Γ£à tbl_cp_student.gender
+Γ£à tbl_cp_student.linkedin_url
+Γ£à tbl_cp_student.github_url
+Γ£à tbl_cp_student.user_type
+Γ£à tbl_cp_student.is_active
+Γ£à tbl_cp_student.status
+Γ¥î tbl_cp_student_address.address_id - Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ£à tbl_cp_student_address.student_id
+Γ£à tbl_cp_student_address.address_line_1
+Γ£à tbl_cp_student_address.address_line_2
+Γ£à tbl_cp_student_address.landmark
+Γ£à tbl_cp_student_address.pincode_id
+Γ£à tbl_cp_student_address.address_type
+Γ¥î tbl_cp_student_school.school_id - Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ£à tbl_cp_student_school.student_id
+Γ£à tbl_cp_student_school.standard
+Γ£à tbl_cp_student_school.board
+Γ£à tbl_cp_student_school.school_name
+Γ£à tbl_cp_student_school.percentage
+Γ£à tbl_cp_student_school.passing_year
+Γ¥î tbl_cp_student_education.edu_id - Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ£à tbl_cp_student_education.student_id
+Γ£à tbl_cp_student_education.college_id
+Γ£à tbl_cp_student_education.course_id
+Γ£à tbl_cp_student_education.start_year
+Γ£à tbl_cp_student_education.end_year
+Γ£à tbl_cp_student_education.cgpa
+Γ£à tbl_cp_student_education.percentage
+Γ¥î tbl_cp_student_workexp.workexp_id - Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ£à tbl_cp_student_workexp.student_id
+Γ£à tbl_cp_student_workexp.company_name
+Γ£à tbl_cp_student_workexp.company_location
+Γ£à tbl_cp_student_workexp.designation
+Γ£à tbl_cp_student_workexp.employment_type
+Γ£à tbl_cp_student_workexp.start_date
+Γ£à tbl_cp_student_workexp.end_date
+Γ£à tbl_cp_student_workexp.is_current
+Γ¥î tbl_cp_studentprojects.project_id - Incorrect table definition; there can be only one auto column and it must be defined as a key
+Γ£à tbl_cp_studentprojects.student_id
+Γ£à tbl_cp_studentprojects.project_title
+Γ£à tbl_cp_studentprojects.project_description
+Γ£à tbl_cp_studentprojects.achievements
+Γ£à tbl_cp_studentprojects.project_start_date
+Γ£à tbl_cp_studentprojects.project_end_date
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.marks_id - column doesn't exist (skip)
+Γ£à tbl_cp_student_subject_marks.student_id
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.semester_name - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.subject_name - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.credits - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.internal_marks - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.external_marks - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.total_marks - column doesn't exist (skip)
+ΓÜá∩╕Å  tbl_cp_student_subject_marks.grade - column doesn't exist (skip)
+Γ£à tbl_cp_m2m_student_certification.issue_date
+Γ£à tbl_cp_m2m_student_certification.expiry_date
+Γ£à tbl_cp_m2m_student_certification.certificate_url
+
+=== Done: 49 OK, 8 skipped, 5 failed ===

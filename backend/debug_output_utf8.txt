@@ -1,0 +1,81 @@
+﻿
+=== Tables matching tbl_cp_* ===
+ - tbl_cp_application
+ - tbl_cp_application_status_history
+ - tbl_cp_college_address
+ - tbl_cp_college_sem_subject
+ - tbl_cp_company_address
+ - tbl_cp_exam_session
+ - tbl_cp_interview_session
+ - tbl_cp_jd_round_config
+ - tbl_cp_job_description
+ - tbl_cp_m2m_exam_question_response
+ - tbl_cp_m2m_jd_round_module
+ - tbl_cp_m2m_question_options
+ - tbl_cp_m2m_session_module_score
+ - tbl_cp_m2m_session_question_response
+ - tbl_cp_m2m_std_interest
+ - tbl_cp_m2m_std_lng
+ - tbl_cp_m2m_std_skill
+ - tbl_cp_m2m_student_certification
+ - tbl_cp_m2m_studentproject_skill
+ - tbl_cp_mattendance
+ - tbl_cp_mcertifications
+ - tbl_cp_mcities
+ - tbl_cp_mcolleges
+ - tbl_cp_mcompany
+ - tbl_cp_mcountries
+ - tbl_cp_mcourses
+ - tbl_cp_mdifficulty
+ - tbl_cp_minterests
+ - tbl_cp_minterviewer
+ - tbl_cp_mlanguages
+ - tbl_cp_mmodule
+ - tbl_cp_mpincodes
+ - tbl_cp_mquestions
+ - tbl_cp_mround_result
+ - tbl_cp_msalutation
+ - tbl_cp_msemester
+ - tbl_cp_mskills
+ - tbl_cp_mstates
+ - tbl_cp_msubjects
+ - tbl_cp_recruitment_drive
+ - tbl_cp_student
+ - tbl_cp_student_address
+ - tbl_cp_student_education
+ - tbl_cp_student_school
+ - tbl_cp_student_subject_marks
+ - tbl_cp_student_workexp
+ - tbl_cp_studentprojects
+
+Γ£à tbl_cp_student_subject_marks exists
+   Columns: row_id(NOT NULL), student_id(NOT NULL), college_sem_subject_id(NOT NULL), evaluation_type(NOT NULL), marks_obtained(NOT NULL), created_at(NULL), updated_at(NULL)
+
+=== tbl_cp_student columns ===
+ - row_id [NOT NULL] 
+ - student_id [NOT NULL] 
+ - salutation_id [NULL ok] 
+ - first_name [NOT NULL] 
+ - middle_name [NULL ok] default=
+ - last_name [NULL ok] default=
+ - email [NOT NULL] 
+ - alt_email [NULL ok] default=
+ - contact_number [NULL ok] 
+ - alt_contact_number [NULL ok] default=0000000000
+ - linkedin_url [NULL ok] default=
+ - github_url [NULL ok] default=
+ - portfolio_url [NULL ok] default=
+ - resume_url [NULL ok] default=
+ - profile_photo_url [NOT NULL] default=default_profile.png
+ - date_of_birth [NOT NULL] default=1900-01-01
+ - current_city [NULL ok] default=Not Specified
+ - gender [NULL ok] default=Not Specified
+ - user_type [NULL ok] default=Student
+ - is_active [NULL ok] 
+ - status [NOT NULL] default=Active
+ - created_at [NULL ok] default=CURRENT_TIMESTAMP
+ - updated_at [NULL ok] default=CURRENT_TIMESTAMP
+
+=== Recent users ===
+ - 3 raja Reddy M umamahesh@gmail.com
+ - 2 UMA MAHESWAR REDDY jakie8276@gmail.com

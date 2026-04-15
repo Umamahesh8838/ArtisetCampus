@@ -1,0 +1,32 @@
+
+Uma Maheswar Reddy
+Email: umamahesh@gmail.com
+Phone: 9876543210
+LinkedIn: https://linkedin.com/in/umamahesh
+GitHub: https://github.com/umamahesh
+
+EDUCATION
+B.Tech in Computer Science & Engineering
+IIT Delhi | 2020 - 2024 | CGPA: 8.5
+
+12th Grade - Delhi Public School - CBSE | 2020 | 95.5%
+10th Grade - Delhi Public School - CBSE | 2018 | 96%
+
+WORK EXPERIENCE
+Software Engineering Intern
+Google, Bangalore | May 2023 - July 2023
+
+Software Development Intern
+Amazon, Bangalore | June 2022 - July 2022
+
+SKILLS
+- Programming: Python, Java, C++, JavaScript
+- Web: React, Node.js, Express, MongoDB
+- Tools: Git, Docker, VS Code
+
+LANGUAGES
+English (Native), Hindi (Fluent)
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner
+Google Cloud Associate Cloud Engineer

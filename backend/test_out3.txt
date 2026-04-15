@@ -1,0 +1,15 @@
+﻿Step 1 OK - user: UMA MAHESWAR REDDY jakie8276@gmail.com
+Step 2 OK - tbl_cp_student INSERT
+Step 3 OK - address (skipped, no data)
+Step 4 OK - school (skipped)
+Step 5 OK - college (deleted only)
+Step 6 OK - semester marks table accessible!
+Step 7 OK - work experience
+Step 8 OK - projects
+Step 9a OK - skills
+Step 9b OK - languages
+Step 9c OK - interests
+Step 9d OK - certifications
+Step 10 OK - users update
+
+Γ£à ALL STEPS PASSED - registration would succeed!

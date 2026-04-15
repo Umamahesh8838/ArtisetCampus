@@ -1,0 +1,8 @@
+﻿tbl_cp_student_address.row_id: already AUTO_INCREMENT
+tbl_cp_student_school.row_id: already AUTO_INCREMENT
+tbl_cp_student_education.row_id: already AUTO_INCREMENT
+tbl_cp_student_workexp.row_id: already AUTO_INCREMENT
+tbl_cp_studentprojects.row_id: already AUTO_INCREMENT
+tbl_cp_student_subject_marks.row_id: already AUTO_INCREMENT
+Γ£à ALTER TABLE tbl_cp_mstates MODIFY COLUMN state_code VARCHAR(10) NULL DEFAULT NUL
+Γ£à ALTER TABLE tbl_cp_mcountries MODIFY COLUMN country_code VARCHAR(10) NULL DEFAUL
