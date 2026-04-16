@@ -234,6 +234,12 @@ router.post('/parse-preview', authenticateToken, upload.single('file'), async (r
   } catch (err) {
     logger.error("[RESUME] Parser error:", err.message);
     
+    let parserErrorDetail = null;
+    if (err.response) {
+      logger.error("[RESUME] Parser error data:", JSON.stringify(err.response.data));
+      parserErrorDetail = err.response.data;
+    }
+    
     if (err.code === 'ECONNREFUSED') {
       return res.status(503).json({ error: 'Resume parser service unavailable' });
     }
@@ -242,7 +248,7 @@ router.post('/parse-preview', authenticateToken, upload.single('file'), async (r
       return res.status(408).json({ error: 'Resume parsing timeout - file too large or parser busy' });
     }
 
-    res.status(500).json({ error: 'Failed to parse resume', details: err.message });
+    res.status(500).json({ error: 'Failed to parse resume', details: err.message, parserDetail: parserErrorDetail });
   }
 });
 
