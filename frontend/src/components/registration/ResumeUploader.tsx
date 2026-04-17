@@ -5,7 +5,7 @@ import { useRegistration } from "@/contexts/RegistrationContext";
 import { toast } from "sonner";
 import { Upload, FileText, Sparkles, X, Loader2 } from "lucide-react";
 
-const RESUME_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000") + "/resume/parse-preview";
+const RESUME_API_URL = (import.meta.env.VITE_API_URL || "https://artisetcampus-backend-fngbg6g3eahsf4gg.eastasia-01.azurewebsites.net") + "/resume/parse-preview";
 
 const ResumeUploader = () => {
   const { setResumeData, setDraftDataDirect, openSection } = useRegistration();

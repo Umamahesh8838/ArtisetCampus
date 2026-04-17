@@ -20,7 +20,7 @@ export default function SettingsPage() {
     email: user?.email || ""
   });
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';       
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://artisetcampus-backend-fngbg6g3eahsf4gg.eastasia-01.azurewebsites.net';       
 
   // Always sync with the AuthContext user object when it becomes available
   useEffect(() => {
