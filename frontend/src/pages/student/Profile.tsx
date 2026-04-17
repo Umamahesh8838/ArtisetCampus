@@ -57,6 +57,10 @@ function ProfileContent() {
   // Track selected file and successful upload status
   const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
   const [resumeUploadStatus, setResumeUploadStatus] = useState<string | null>(null);
+
+  // Check if we already have a saved resume
+  const existingResumeUrl = draftData?.basic?.resumeUrl;
+  const hasExistingResume = !!existingResumeUrl;
   
   const fileInputRef = React.createRef<HTMLInputElement>();
 
@@ -120,6 +124,13 @@ function ProfileContent() {
         toast.dismiss(loadingToastId);
         toast.success("Resume stored securely in Azure Storage!");
         setResumeUploadStatus(file.name + ' uploaded securely.');
+        // Update local context so we immediately see "View Resume" use the new URL
+        if (resp.data.url) {
+          setDraftDataDirect({
+            ...draftData,
+            basic: { ...(draftData.basic || {}), resumeUrl: resp.data.url }
+          });
+        }
       } else {
         throw new Error("Failed response from Azure upload");
       }
@@ -274,16 +285,27 @@ function ProfileContent() {
                 <UploadCloud className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <div className="text-sm font-medium">Upload Resume</div>
-                <div className="text-xs text-muted-foreground">{resumeUploadStatus || "Supports PDF and DOCX files"}</div>
+                <div className="text-sm font-medium">
+                  {hasExistingResume && !selectedResumeFile ? "Resume Uploaded" : "Upload Resume"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {resumeUploadStatus || (hasExistingResume ? "Your resume is stored securely." : "Supports PDF and DOCX files")}
+                </div>
                 {parseStatusMessage && <div className="text-xs font-semibold text-primary mt-1">{parseStatusMessage}</div>}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <input ref={fileInputRef} onChange={onFileChange} type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" />
+            {(selectedResumeFile || hasExistingResume) && !parsing && (
+              <Button variant="outline" asChild>
+                <a href={selectedResumeFile ? URL.createObjectURL(selectedResumeFile) : existingResumeUrl} target="_blank" rel="noopener noreferrer">
+                  View Resume
+                </a>
+              </Button>
+            )}
             <Button onClick={() => fileInputRef.current?.click()} disabled={parsing}>
-              {selectedResumeFile ? "Change Resume" : "Upload Resume"}
+              {selectedResumeFile || hasExistingResume ? "Change Resume" : "Upload Resume"}
             </Button>
 
             {selectedResumeFile && (

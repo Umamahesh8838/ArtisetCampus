@@ -48,6 +48,8 @@ async function buildDraftFromDb(user_id) {
                 linkedIn: s.linkedin_url || '',
                 github: s.github_url || '',
                 portfolio: s.portfolio_url || '',
+                resumeUrl: s.resume_url || '',
+                photo: s.profile_photo_url || '',
                 dob: s.date_of_birth && s.date_of_birth !== '1900-01-01'
                     ? new Date(s.date_of_birth).toISOString().split('T')[0]
                     : '',
