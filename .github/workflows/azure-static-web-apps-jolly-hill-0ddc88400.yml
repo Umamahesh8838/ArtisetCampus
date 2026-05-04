@@ -45,7 +45,7 @@ jobs:
           output_location: "dist" # Built app content directory - optional
           github_id_token: ${{ steps.idtoken.outputs.result }}
         env:
-          VITE_API_URL: "https://jolly-hill-0ddc88400.7.azurestaticapps.net"
+          VITE_API_URL: "https://artisetcampus-backend-fngbg6g3eahsf4gg.centralindia-01.azurewebsites.net"
           VIT_APP_NAME: "Artiset Campus"
           ###### End of Repository/Build Configurations ######
 
