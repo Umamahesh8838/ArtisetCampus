@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { GraduationCap, Mail, ShieldCheck, Loader2, Phone, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
