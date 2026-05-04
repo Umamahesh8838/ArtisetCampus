@@ -32,6 +32,12 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
+           
+      - name: Set up environment variables
+        run: |
+          echo "VITE_API_URL=https://artisetcampus-backend-fngbg6g3eahsf4gg.centralindia-01.azurewebsites.net" >> frontend/.env.production
+          echo "VITE_APP_NAME=Artiset Campus" >> frontend/.env.production
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
