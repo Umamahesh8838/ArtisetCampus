@@ -29,7 +29,8 @@ const handleResumeUpload = async (file) => {
 
   try {
     console.log("\n🔄 Sending to backend...");
-    const response = await axios.post('http://localhost:3000/resume/parse-preview', formData, {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const response = await axios.post(`${API_URL}/resume/parse-preview`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
