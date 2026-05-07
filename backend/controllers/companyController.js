@@ -1,5 +1,5 @@
 // MIGRATED TO campus6 schema - Company master data management
-// Changed: Removed spoc_*, simplified structure, drives now via JDs
+// Supports company master records with SPOC contact details
 
 const { pool } = require('../config/db');
 const logger = require('../utils/logger');
@@ -13,7 +13,7 @@ async function getCompanies(req, res) {
     const { limit = 20, offset = 0, is_active = 1 } = req.query;
     
     let query = `
-      SELECT company_id, name AS company_name, industry, website, is_active, created_at, updated_at
+      SELECT company_id, name AS company_name, industry, website, city, contact_name, contact_email, contact_phone, is_active, created_at, updated_at
       FROM tbl_cp_mcompany
       WHERE is_active = ?
       ORDER BY company_name ASC LIMIT ? OFFSET ?
@@ -50,7 +50,7 @@ async function getCompanyById(req, res) {
     const { id } = req.params;
     
     const [companies] = await pool.query(
-      `SELECT company_id, name AS company_name, industry, website, is_active, created_at, updated_at
+      `SELECT company_id, name AS company_name, industry, website, city, contact_name, contact_email, contact_phone, is_active, created_at, updated_at
        FROM tbl_cp_mcompany WHERE company_id = ?`,
       [id]
     );
@@ -104,7 +104,7 @@ async function getCompanyById(req, res) {
  */
 async function createCompany(req, res) {
   try {
-    const { company_name, industry, website } = req.body;
+    const { company_name, industry, website, city, contact_name, contact_email, contact_phone } = req.body;
     
     // Validation
     if (!company_name) {
@@ -119,9 +119,18 @@ async function createCompany(req, res) {
     
     // Insert company
     await pool.query(
-      `INSERT INTO tbl_cp_mcompany (company_id, name, industry, website, is_active, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
-      [nextCompanyId, company_name, industry || null, website || null]
+      `INSERT INTO tbl_cp_mcompany (company_id, name, industry, website, city, contact_name, contact_email, contact_phone, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+      [
+        nextCompanyId,
+        company_name,
+        industry || null,
+        website || null,
+        city || null,
+        contact_name || null,
+        contact_email || null,
+        contact_phone || null
+      ]
     );
     
     logger.info(`Company ${nextCompanyId} created by user ${req.user ? (req.user.id || req.user.user_id) : 'system'}`);
@@ -142,7 +151,7 @@ async function createCompany(req, res) {
 async function updateCompany(req, res) {
   try {
     const { id } = req.params;
-    const { company_name, industry, website, is_active } = req.body;
+    const { company_name, industry, website, city, contact_name, contact_email, contact_phone, is_active } = req.body;
     
     // Verify company exists
     const [existingCompanies] = await pool.query(
@@ -171,6 +180,26 @@ async function updateCompany(req, res) {
     if (website !== undefined) {
       updates.push('website = ?');
       values.push(website);
+    }
+
+    if (city !== undefined) {
+      updates.push('city = ?');
+      values.push(city);
+    }
+
+    if (contact_name !== undefined) {
+      updates.push('contact_name = ?');
+      values.push(contact_name);
+    }
+
+    if (contact_email !== undefined) {
+      updates.push('contact_email = ?');
+      values.push(contact_email);
+    }
+
+    if (contact_phone !== undefined) {
+      updates.push('contact_phone = ?');
+      values.push(contact_phone);
     }
     
     if (is_active !== undefined) {
@@ -256,7 +285,7 @@ async function deleteCompany(req, res) {
 async function getActiveCompanies(req, res) {
   try {
     const [companies] = await pool.query(
-      `SELECT company_id, name AS company_name
+      `SELECT company_id, name AS company_name, city, contact_name, contact_email, contact_phone
        FROM tbl_cp_mcompany
        WHERE is_active = 1
        ORDER BY company_name ASC`

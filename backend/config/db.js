@@ -584,11 +584,29 @@ async function initDb() {
         industry VARCHAR(150) DEFAULT 'Not Specified',
         website VARCHAR(255) DEFAULT '',
         city VARCHAR(100) DEFAULT 'Not Specified',
+        spoc_name VARCHAR(150) DEFAULT 'Not Assigned',
+        spoc_email VARCHAR(255) DEFAULT 'noreply@company.com',
+        spoc_phone VARCHAR(20) DEFAULT '0000000000',
         is_active BOOLEAN NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    const ensureColumnExists = async (tableName, columnName, columnDefinition) => {
+      const [existingColumns] = await pool.query(
+        `SELECT COUNT(*) AS column_count
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?`,
+        [tableName, columnName]
+      );
+
+      if (!existingColumns[0] || existingColumns[0].column_count === 0) {
+        await pool.execute(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+      }
+    };
 
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS tbl_cp_company_address (

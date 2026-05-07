@@ -1046,3 +1046,8 @@ ALTER TABLE tbl_cp_mskills ALTER COLUMN language_id SET DEFAULT 1;
 
 ALTER TABLE tbl_cp_mskills DROP FOREIGN KEY tbl_cp_mskills_ibfk_1;
 ALTER TABLE tbl_cp_mskills DROP COLUMN language_id;
+
+ALTER TABLE tbl_cp_mcompany
+ADD COLUMN contact_name  VARCHAR(150) DEFAULT 'Not Assigned',
+ADD COLUMN contact_phone VARCHAR(20)  DEFAULT '0000000000',
+ADD COLUMN contact_email VARCHAR(255) DEFAULT 'noreply@company.com';

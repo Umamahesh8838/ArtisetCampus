@@ -3,18 +3,25 @@ import client from './client';
 export interface Company {
   company_id: number;
   company_name: string;
-  spoc_email: string;
-  phone: string;
+  contact_name?: string;
+  contact_email: string;
+  contact_phone?: string;
   website?: string;
   description?: string;
   address?: string;
   city?: string;
   country?: string;
+  spoc_name?: string;
+  spoc_email?: string;
+  spoc_phone?: string;
   spocUserId?: number;
   spocUserName?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active?: boolean;
+  isActive?: boolean;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
 }
 
 export interface RecruitmentDrive {

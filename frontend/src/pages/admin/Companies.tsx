@@ -20,9 +20,10 @@ export default function CompaniesPage() {
     company_name: "",
     industry: "",
     website: "",
-    spoc_name: "",
-    spoc_email: "",
-    spoc_phone: ""
+    city: "",
+    contact_name: "",
+    contact_email: "",
+    contact_phone: ""
   });
 
   const { data, loading, error, refetch } = useApi<{ companies: any[]; total: number }>(
@@ -31,8 +32,8 @@ export default function CompaniesPage() {
 
   const handleSave = async () => {
     try {
-      if (!formData.company_name || !formData.spoc_email) {
-        toast.error("Company name and SPOC email are required");
+      if (!formData.company_name || !formData.contact_email) {
+        toast.error("Company name and contact email are required");
         return;
       }
       
@@ -45,7 +46,7 @@ export default function CompaniesPage() {
       }
       
       setDialogOpen(false);
-      setFormData({ company_name: "", industry: "", website: "", spoc_name: "", spoc_email: "", spoc_phone: "" });
+      setFormData({ company_name: "", industry: "", website: "", city: "", contact_name: "", contact_email: "", contact_phone: "" });
       refetch();
     } catch (err: any) {
       toast.error(err.message || "Failed to save company");
@@ -63,7 +64,7 @@ export default function CompaniesPage() {
         </div>
         <Button className="gap-2" onClick={() => {
           setEditId(null);
-          setFormData({ company_name: "", industry: "", website: "", spoc_name: "", spoc_email: "", spoc_phone: "" });
+          setFormData({ company_name: "", industry: "", website: "", city: "", contact_name: "", contact_email: "", contact_phone: "" });
           setDialogOpen(true);
         }}><Plus className="h-4 w-4" /> Add Company</Button>
       </div>
@@ -75,8 +76,10 @@ export default function CompaniesPage() {
               <TableRow>
                 <TableHead>Company</TableHead>
                 <TableHead>Industry</TableHead>
+                <TableHead>City</TableHead>
                 <TableHead>Contact Person</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
@@ -84,13 +87,13 @@ export default function CompaniesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                   </TableCell>
                 </TableRow>
               ) : companies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                     No companies found.
                   </TableCell>
                 </TableRow>
@@ -99,8 +102,10 @@ export default function CompaniesPage() {
                   <TableRow key={c.company_id}>
                     <TableCell className="font-medium">{c.company_name}</TableCell>
                     <TableCell>{c.industry || "N/A"}</TableCell>
-                    <TableCell>{c.spoc_name || "N/A"}</TableCell>
-                    <TableCell>{c.spoc_email}</TableCell>
+                    <TableCell>{c.city || "N/A"}</TableCell>
+                    <TableCell>{c.contact_name || "N/A"}</TableCell>
+                    <TableCell>{c.contact_email}</TableCell>
+                    <TableCell>{c.contact_phone || "N/A"}</TableCell>
                     <TableCell>
                       <Badge className={`text-xs capitalize border-0 ${c.is_active ? STATUS_COLORS.active : STATUS_COLORS.inactive}`}>
                         {c.is_active ? "Active" : "Inactive"}
@@ -113,9 +118,10 @@ export default function CompaniesPage() {
                           company_name: c.company_name || "",
                           industry: c.industry || "",
                           website: c.website || "",
-                          spoc_name: c.spoc_name || "",
-                          spoc_email: c.spoc_email || "",
-                          spoc_phone: c.spoc_phone || ""
+                          city: c.city || "",
+                          contact_name: c.contact_name || "",
+                          contact_email: c.contact_email || "",
+                          contact_phone: c.contact_phone || ""
                         });
                         setDialogOpen(true);
                       }}>
@@ -137,11 +143,12 @@ export default function CompaniesPage() {
             <div><Label>Company Name</Label><Input value={formData.company_name} onChange={e => setFormData({...formData, company_name: e.target.value})} placeholder="e.g. Google" /></div>
             <div><Label>Industry</Label><Input value={formData.industry} onChange={e => setFormData({...formData, industry: e.target.value})} placeholder="e.g. Technology" /></div>
             <div><Label>Website</Label><Input value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} placeholder="e.g. google.com" /></div>
+            <div><Label>City</Label><Input value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="e.g. New York" /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Contact Person</Label><Input value={formData.spoc_name} onChange={e => setFormData({...formData, spoc_name: e.target.value})} placeholder="Name" /></div>
-              <div><Label>Email</Label><Input value={formData.spoc_email} onChange={e => setFormData({...formData, spoc_email: e.target.value})} placeholder="email@company.com" /></div>
+              <div><Label>Contact Name</Label><Input value={formData.contact_name} onChange={e => setFormData({...formData, contact_name: e.target.value})} placeholder="Contact person name" /></div>
+              <div><Label>Email</Label><Input value={formData.contact_email} onChange={e => setFormData({...formData, contact_email: e.target.value})} placeholder="email@company.com" /></div>
             </div>
-            <div><Label>Phone</Label><Input value={formData.spoc_phone} onChange={e => setFormData({...formData, spoc_phone: e.target.value})} placeholder="Phone number" /></div>
+            <div><Label>Phone</Label><Input value={formData.contact_phone} onChange={e => setFormData({...formData, contact_phone: e.target.value})} placeholder="Phone number" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
