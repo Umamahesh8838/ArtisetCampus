@@ -155,7 +155,7 @@ export default function RecruitmentDrives() {
                     <TableCell>{new Date(d.drive_end_date).toLocaleDateString()}</TableCell>
                     <TableCell><Badge className={`text-xs capitalize border-0 ${getStatusColor(d.status)}`}>{d.status}</Badge></TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => (window.location.href = `/admin/rounds/${d.drive_id}`)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => (window.location.href = `/admin/rounds/${d.jd_id}`)}>
                         <Settings2 className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(d)}>

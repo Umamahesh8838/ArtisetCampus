@@ -88,8 +88,8 @@ async function processRegistration(connection, user_id, draft) {
           basic.lastName || u.last_name,
           u.email,
           basic.contactNumber || u.phone,
-          basic.linkedinUrl || null,
-          basic.githubUrl || null,
+          basic.linkedIn || basic.linkedinUrl || null,
+          basic.github || basic.githubUrl || null,
           dob,
           basic.gender || 'Male',
           user_id
@@ -109,8 +109,8 @@ async function processRegistration(connection, user_id, draft) {
           basic.lastName || u.last_name,
           u.email,
           basic.contactNumber || u.phone,
-          basic.linkedinUrl || null,
-          basic.githubUrl || null,
+          basic.linkedIn || basic.linkedinUrl || null,
+          basic.github || basic.githubUrl || null,
           dob,
           basic.gender || 'Male'
         ]
@@ -313,7 +313,7 @@ async function processRegistration(connection, user_id, draft) {
     );
 
     for (const exp of (draft.workExperience || [])) {
-      if (!exp.company) continue;
+      if (!exp.company || !exp.startDate) continue;
 
       try {
         await insertWithNextId(

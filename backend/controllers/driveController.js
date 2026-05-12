@@ -12,8 +12,9 @@ async function getDrives(req, res) {
   try {
     const { limit = 20, offset = 0, status } = req.query;
     let query = `
-      SELECT d.drive_id, d.drive_name, d.jd_id, d.start_date as drive_start_date, d.end_date as drive_end_date, d.status,
-             d.created_at, d.updated_at, jd.title as jd_title, c.name as company_name
+            SELECT d.drive_id, d.drive_name, d.jd_id, d.start_date as drive_start_date, d.end_date as drive_end_date,
+              CASE WHEN d.end_date < CURRENT_DATE THEN 'Closed' ELSE d.status END AS status,
+             d.created_at, d.updated_at, jd.title as jd_title, jd.job_role, jd.openings, jd.location, jd.salary_min, jd.salary_max, jd.experience_min_yrs, jd.experience_max_yrs, c.name as company_name
       FROM tbl_cp_recruitment_drive d
       LEFT JOIN tbl_cp_job_description jd ON d.jd_id = jd.jd_id
       LEFT JOIN tbl_cp_mcompany c ON jd.company_id = c.company_id
@@ -64,7 +65,9 @@ async function getDriveById(req, res) {
     const { id } = req.params;
     
     const [drives] = await pool.query(
-      `SELECT d.drive_id, d.drive_name, d.jd_id, d.start_date, d.end_date, d.status, d.created_date, d.updated_date
+            `SELECT d.drive_id, d.drive_name, d.jd_id, d.start_date, d.end_date,
+              CASE WHEN d.end_date < CURRENT_DATE THEN 'Closed' ELSE d.status END AS status,
+              d.created_at, d.updated_at
        FROM tbl_cp_recruitment_drive d
        WHERE d.drive_id = ?`,
       [id]
@@ -76,30 +79,54 @@ async function getDriveById(req, res) {
     
     const drive = drives[0];
     
-    // Fetch associated JD info
-    const [jdRows] = await pool.query(
-      `SELECT j.jd_id, j.title, j.description, j.company_id, c.name AS company_name
-       FROM tbl_cp_job_description j
-       LEFT JOIN tbl_cp_mcompany c ON j.company_id = c.company_id
-       WHERE j.jd_id = ?`,
-      [drive.jd_id]
-    );
-    
-    const jd = jdRows.length > 0 ? jdRows[0] : null;
-    
-    // Fetch drive rounds if exists
-    const [rounds] = await pool.query(
-      `SELECT dr.*, r.round_label
-       FROM tbl_cp_recruitment_drive_round dr
-       LEFT JOIN tbl_cp_jd_round_config r ON dr.round_config_id = r.round_config_id
-       WHERE dr.drive_id = ?
-       ORDER BY r.round_number`,
-      [id]
-    );
-    
-    res.json({ drive, jd, rounds });
+      // Fetch associated JD info (guard if jd_id missing)
+      let jd = null;
+      try {
+        if (drive.jd_id) {
+          const [jdRows] = await pool.query(
+            `SELECT j.jd_id, j.title, j.description, j.company_id, j.job_role, j.openings, j.location, j.salary_min, j.salary_max, j.bond_months, j.experience_min_yrs, j.experience_max_yrs, c.name AS company_name
+             FROM tbl_cp_job_description j
+             LEFT JOIN tbl_cp_mcompany c ON j.company_id = c.company_id
+             WHERE j.jd_id = ?`,
+            [drive.jd_id]
+          );
+          jd = jdRows && jdRows.length > 0 ? jdRows[0] : null;
+        }
+      } catch (errInner) {
+        // non-fatal: log and continue with jd=null
+        logger.warn('Failed to fetch JD for drive', drive.drive_id, errInner && errInner.message);
+        jd = null;
+      }
+
+      // Fetch drive rounds if exists (select explicit expected columns)
+      let rounds = [];
+      try {
+        const [roundRows] = await pool.query(
+          `SELECT round_id, drive_id, round_number AS number, round_name, round_type, config_json
+           FROM tbl_cp_recruitment_drive_round
+           WHERE drive_id = ?
+           ORDER BY round_number ASC`,
+          [id]
+        );
+        // Normalize round shape for frontend: ensure `number`, `label`, and parsed `config`
+        rounds = (roundRows || []).map((r) => ({
+          round_id: r.round_id,
+          drive_id: r.drive_id,
+          number: r.number || r.round_number,
+          label: r.round_name || r.round_label || `Round ${r.number || r.round_number}`,
+          type: r.round_type,
+          config: r.config_json ? (typeof r.config_json === 'string' ? JSON.parse(r.config_json) : r.config_json) : null,
+          created_at: r.created_at,
+          updated_at: r.updated_at
+        }));
+      } catch (errInner) {
+        logger.warn('Failed to fetch rounds for drive', drive.drive_id, errInner && errInner.message);
+        rounds = [];
+      }
+
+      res.json({ drive, jd, rounds });
   } catch (err) {
-    logger.error('Get drive by ID error:', err.message);
+    logger.error('Get drive by ID error:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -154,7 +181,7 @@ async function createDrive(req, res) {
     // Insert drive
     await pool.query(
       `INSERT INTO tbl_cp_recruitment_drive 
-       (drive_id, drive_name, jd_id, start_date, end_date, status, created_date, updated_date)
+       (drive_id, drive_name, jd_id, start_date, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [nextDriveId, drive_name, jd_id, start_date, end_date, status]
     );
@@ -250,7 +277,7 @@ async function updateDrive(req, res) {
     }
     
     values.push(id);
-    updates.push('updated_date = NOW()');
+    updates.push('updated_at = NOW()');
     
     await pool.query(
       `UPDATE tbl_cp_recruitment_drive SET ${updates.join(', ')} WHERE drive_id = ?`,
@@ -289,7 +316,7 @@ async function closeDrive(req, res) {
     
     await pool.query(
       `UPDATE tbl_cp_recruitment_drive 
-       SET status = 'Closed', updated_date = NOW()
+       SET status = 'Closed', updated_at = NOW()
        WHERE drive_id = ?`,
       [id]
     );
@@ -324,7 +351,7 @@ async function deleteDrive(req, res) {
     // Set status to 'Archived' instead of hard delete
     await pool.query(
       `UPDATE tbl_cp_recruitment_drive 
-       SET status = 'Archived', updated_date = NOW()
+       SET status = 'Archived', updated_at = NOW()
        WHERE drive_id = ?`,
       [id]
     );

@@ -16,8 +16,8 @@ export interface Application {
 
 export interface CreateApplicationData {
   drive_id: number;
-  jd_id: number;
-  company_id: number;
+  jd_id?: number;
+  company_id?: number;
 }
 
 export const applyToDrive = (data: CreateApplicationData) => {

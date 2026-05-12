@@ -5,6 +5,9 @@ export const usersAPI = {
   // Get current user (same as auth.getMe)
   getMe: () => client.get<{ user: User }>('/users/me'),
 
+  // Get student profile with all sections
+  getStudentProfile: () => client.get('/student/profile'),
+
   // Update current user profile
   updateMe: (firstName: string, lastName: string, phone: string) =>
     client.put('/users/me', { firstName, lastName, phone }),

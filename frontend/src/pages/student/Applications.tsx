@@ -74,11 +74,11 @@ export default function MyApplications() {
                     <TableCell className="font-medium">
                       {app.drive_name || "N/A"}
                     </TableCell>
-                    <TableCell>{new Date(app.applied_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(app.applied_date || app.application_date || app.created_at || Date.now()).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Badge className={`text-xs capitalize border-0 ${STATUS_COLORS[app.status as keyof typeof STATUS_COLORS] || ""}`}>{app.status}</Badge>
+                      <Badge className={`text-xs capitalize border-0 ${STATUS_COLORS[String(app.status || '').toLowerCase() as keyof typeof STATUS_COLORS] || ""}`}>{app.status}</Badge>
                     </TableCell>
-                    <TableCell>{app.current_round || "N/A"}</TableCell>
+                    <TableCell>{app.current_round || app.current_round_number || "N/A"}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Eye className="h-4 w-4" />

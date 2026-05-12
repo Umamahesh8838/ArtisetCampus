@@ -9,6 +9,12 @@ export interface Drive {
   status: 'Draft' | 'Active' | 'Closed' | 'Archived';
   jd_title?: string;
   company_name?: string;
+  location?: string;
+  openings?: number;
+  salary_min?: string | number;
+  salary_max?: string | number;
+  experience_min_yrs?: string | number;
+  experience_max_yrs?: string | number;
   created_at: string;
   updated_at: string;
 }

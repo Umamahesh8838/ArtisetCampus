@@ -12,7 +12,7 @@ interface RoundModule {
   module_id: number;
   module_name?: string;
   weightage: number;
-  difficulty: string;
+  difficulty: number;
   mandatory: boolean;
 }
 
@@ -21,6 +21,7 @@ interface Round {
   round_number?: number;
   label?: string; 
   isExam: boolean;
+  config?: any;
   modules: RoundModule[];
 }
 
@@ -29,9 +30,18 @@ export default function RoundConfigPage() {
   const navigate = useNavigate();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [availableModules, setAvailableModules] = useState<any[]>([]);
+  const [availableDifficulties, setAvailableDifficulties] = useState<any[]>([]);
   const [jdDetails, setJdDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const toDateTimeLocal = (value?: string | null) => {
+    if (!value) return "";
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,36 +61,49 @@ export default function RoundConfigPage() {
         // Fetch Configured Rounds
         const res = await client.get(`/rounds/jd/${jdId}`);
         
-        // Fetch available modules safely
-        let fetchedModules: any[] = [];
-        try {
-           const modRes = await client.get('/questions/modules');
-           fetchedModules = modRes.data.modules || [];
-           setAvailableModules(fetchedModules);
-        } catch(e) {
-           console.log("Could not fetch modules natively, might default");
-        }
+          // Fetch available modules and difficulty options
+          let fetchedModules: any[] = [];
+          let fetchedDifficulties: any[] = [];
+          try {
+            const [modRes, diffRes] = await Promise.all([
+             client.get('/questions/modules'),
+             client.get('/questions/difficulties')
+            ]);
+            fetchedModules = modRes.data.modules || [];
+            fetchedDifficulties = diffRes.data.difficulties || [];
+            setAvailableModules(fetchedModules);
+            setAvailableDifficulties(fetchedDifficulties);
+          } catch(e) {
+            console.log("Could not fetch modules/difficulties");
+          }
 
-        const backendRounds = res.data.rounds?.map((r: any) => ({
+        const backendRounds = res.data.rounds?.map((r: any) => {
+          const parsedConfig = r.config_json ? (typeof r.config_json === 'string' ? JSON.parse(r.config_json) : r.config_json) : {};
+          const scheduledRaw = parsedConfig?.scheduledDate || parsedConfig?.original?.scheduledDate || null;
+          return ({
           round_config_id: r.round_config_id,
           round_number: r.round_number,
-          label: r.round_label,
+          label: r.round_label || r.round_name || `Round ${r.round_number || ''}`,
           isExam: Boolean(r.is_exam),
+          config: {
+            ...parsedConfig,
+            scheduledDate: toDateTimeLocal(scheduledRaw),
+          },
           modules: r.modules?.map((m: any) => ({
              module_id: m.module_id,
              module_name: m.module_name,
              weightage: parseFloat(m.weightage) || 0.1,
-             difficulty: m.difficulty_id || "medium",
+             difficulty: Number(m.difficulty_id) || Number(fetchedDifficulties[0]?.difficulty_id) || 1,
              mandatory: !!m.is_mandatory
           })) || []
-        })) || [];
+        })}) || [];
 
         if (backendRounds.length > 0) {
           setRounds(backendRounds);
         } else {
           setRounds([
-            { round_number: 1, label: "Aptitude Test", isExam: true, modules: [] },
-            { round_number: 2, label: "Technical Interview", isExam: false, modules: [] },
+            { round_number: 1, label: "Aptitude Test", isExam: true, modules: [], config: {} },
+            { round_number: 2, label: "Technical Interview", isExam: false, modules: [], config: {} },
           ]);
         }
       } catch (err: any) {
@@ -94,7 +117,13 @@ export default function RoundConfigPage() {
   }, [jdId]);
 
   const addRound = () => {
-    setRounds([...rounds, { round_number: rounds.length + 1, label: "", isExam: false, modules: [] }]);
+    setRounds([...rounds, { round_number: rounds.length + 1, label: "", isExam: false, modules: [], config: {} }]);
+  };
+
+  const rebalanceWeightage = (modules: RoundModule[]) => {
+    if (!modules.length) return modules;
+    const equal = Number((1 / modules.length).toFixed(4));
+    return modules.map((m) => ({ ...m, weightage: equal }));
   };
 
   const addModule = (roundIndex: number) => {
@@ -103,19 +132,33 @@ export default function RoundConfigPage() {
       return;
     }
     const fallbackId = availableModules[0].module_id;
+    const fallbackDifficulty = Number(availableDifficulties[0]?.difficulty_id) || 1;
     const updated = [...rounds];
-    updated[roundIndex].modules.push({ module_id: fallbackId, weightage: 0.1, difficulty: "medium", mandatory: true });
+    updated[roundIndex].modules.push({ module_id: fallbackId, weightage: 0.1, difficulty: fallbackDifficulty, mandatory: true });
+    updated[roundIndex].modules = rebalanceWeightage(updated[roundIndex].modules);
     setRounds(updated);
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      await client.put(`/rounds/${jdId}`, { rounds });
+      const payloadRounds = rounds.map((r) => {
+        const scheduledDate = r?.config?.scheduledDate;
+        const normalizedScheduled = scheduledDate ? new Date(scheduledDate).toISOString() : null;
+        return {
+          ...r,
+          config: {
+            ...(r.config || {}),
+            scheduledDate: normalizedScheduled,
+          }
+        };
+      });
+
+      await client.put(`/rounds/${jdId}`, { rounds: payloadRounds });
       toast.success("Round configuration saved!");
       
       // Navigate back
-      setTimeout(() => navigate('/admin/job-descriptions'), 1500);
+      setTimeout(() => navigate('/admin/jds'), 1500);
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to save configuration"); 
     } finally {
@@ -147,6 +190,7 @@ export default function RoundConfigPage() {
                   <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-sm font-bold text-primary-foreground">{round.round_number}</div>
                   <div className="flex items-center gap-3">
                     <Input value={round.label} onChange={e => { const u = [...rounds]; u[ri].label = e.target.value; setRounds(u); }} placeholder="Round name" className="w-56 h-9 font-medium" />
+                    <Input type="datetime-local" value={round.config?.scheduledDate || ''} onChange={e => { const u = [...rounds]; u[ri].config = { ...(u[ri].config || {}), scheduledDate: e.target.value }; setRounds(u); }} className="ml-3 w-60 h-9" />
                     <div className="flex items-center gap-2 ml-4">
                       <span className="text-sm font-medium text-foreground">Exam Round?</span>
                       <Switch checked={round.isExam} onCheckedChange={v => { const u = [...rounds]; u[ri].isExam = v; setRounds(u); }} />
@@ -182,21 +226,31 @@ export default function RoundConfigPage() {
                                ))}
                             </select>
                             
-                            <Input 
+                             <Input 
                                type="number" 
                                placeholder="Weight (0.1)" 
                                className="w-24 h-9" 
                                value={mod.weightage} 
-                               step="0.1"
+                               step="0.01"
                                onChange={e => { const u = [...rounds]; u[ri].modules[mi].weightage = parseFloat(e.target.value); setRounds(u); }} 
                             />
+
+                             <select
+                               className="flex h-9 w-40 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors"
+                               value={mod.difficulty}
+                               onChange={e => { const u = [...rounds]; u[ri].modules[mi].difficulty = parseInt(e.target.value); setRounds(u); }}
+                             >
+                              {availableDifficulties.map((d) => (
+                                <option key={d.difficulty_id} value={d.difficulty_id}>{d.level_label || d.level_code}</option>
+                              ))}
+                             </select>
                             
                             <div className="flex items-center gap-2 px-2">
                                <Switch checked={mod.mandatory} onCheckedChange={v => { const u = [...rounds]; u[ri].modules[mi].mandatory = v; setRounds(u); }} />
                                <span className="text-xs text-muted-foreground whitespace-nowrap">Mandatory</span>
                             </div>
                             
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive ml-auto" onClick={() => { const u = [...rounds]; u[ri].modules = u[ri].modules.filter((_, i) => i !== mi); setRounds(u); }}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive ml-auto" onClick={() => { const u = [...rounds]; u[ri].modules = rebalanceWeightage(u[ri].modules.filter((_, i) => i !== mi)); setRounds(u); }}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                          </div>

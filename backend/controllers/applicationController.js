@@ -41,7 +41,13 @@ async function applyToDrive(req, res) {
     const studentId = (req.user.id || req.user.user_id);
     const { drive_id } = req.body;
     
+    if (!studentId) {
+      logger.warn('Missing student ID in request');
+      return res.status(401).json({ error: 'Unauthorized: Student ID not found' });
+    }
+    
     if (!drive_id) {
+      logger.warn('Missing drive_id in request body:', req.body);
       return res.status(400).json({ error: 'Missing required field: drive_id' });
     }
 
@@ -50,13 +56,17 @@ async function applyToDrive(req, res) {
 
     // 1. Verify drive exists and is active
     const [driveRows] = await conn.execute(
-      'SELECT drive_id, jd_id FROM tbl_cp_recruitment_drive WHERE drive_id = ? AND status = ?',
+      `SELECT drive_id, jd_id
+       FROM tbl_cp_recruitment_drive
+       WHERE drive_id = ?
+         AND status = ?
+         AND end_date >= CURRENT_DATE`,
       [drive_id, 'Active']
     );
     
     if (!driveRows.length) {
       await conn.rollback();
-      return res.status(404).json({ error: 'Drive not found or inactive' });
+      return res.status(404).json({ error: 'Drive not found, inactive, or expired' });
     }
 
     // 2. Check if student has already applied to this drive
@@ -98,8 +108,8 @@ async function applyToDrive(req, res) {
     });
   } catch (err) {
     if (conn) await conn.rollback();
-    logger.error('Apply to drive error:', err.message);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Apply to drive error:', err.message, err.stack);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   } finally {
     if (conn) conn.release();
   }
@@ -110,9 +120,17 @@ async function getApplicationById(req, res) {
   try {
     const { id } = req.params;
     const user = req.user;
-    
+
     const [rows] = await pool.query(
-      'SELECT * FROM tbl_cp_application WHERE application_id = ?',
+      `SELECT a.*, d.drive_name, d.jd_id,
+              jd.title AS jd_title,
+              jd.job_role,
+              c.name AS company_name
+       FROM tbl_cp_application a
+       LEFT JOIN tbl_cp_recruitment_drive d ON a.drive_id = d.drive_id
+       LEFT JOIN tbl_cp_job_description jd ON d.jd_id = jd.jd_id
+       LEFT JOIN tbl_cp_mcompany c ON jd.company_id = c.company_id
+       WHERE a.application_id = ?`,
       [id]
     );
     
@@ -123,11 +141,20 @@ async function getApplicationById(req, res) {
     const application = rows[0];
 
     // Check access: student can see own, admin/tpo can see all
-    if (user.role !== 'admin' && user.role !== 'tpo' && application.student_id !== user.id) {
+    const userId = user.id || user.user_id;
+    if (user.role !== 'admin' && user.role !== 'tpo' && application.student_id !== userId) {
       return res.status(403).json({ error: 'Forbidden: cannot access this application' });
     }
 
-    res.json({ application });
+    const [history] = await pool.query(
+      `SELECT history_id, application_id, status, changed_date
+       FROM tbl_cp_application_status_history
+       WHERE application_id = ?
+       ORDER BY changed_date ASC`,
+      [id]
+    );
+
+    res.json({ application, history });
   } catch (err) {
     logger.error('Get application error:', err.message);
     res.status(500).json({ error: 'Internal server error' });

@@ -8,6 +8,7 @@ const client = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Add JWT token to request headers
@@ -26,6 +27,17 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // 409 Conflict - usually already applied / duplicate action
+    if (error.response?.status === 409) {
+      const message = (error.response.data as any)?.error || (error.response.data as any)?.message || 'This action was already completed.';
+      return Promise.reject(new Error(message));
+    }
+
+    // 407 Proxy Authentication Required - usually network/proxy issue
+    if (error.response?.status === 407) {
+      return Promise.reject(new Error('Network connection error. Please check your connection or try again later.'));
+    }
+
     // 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       const isAuthEndpoint = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/signup');

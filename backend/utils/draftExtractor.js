@@ -95,7 +95,7 @@ async function buildDraftFromDb(user_id) {
 
         // 3. School (10th, 12th separated by standard)
         const [schoolRows] = await conn.execute(
-            'SELECT * FROM tbl_cp_student_school WHERE student_id ? ORDER BY standard',
+            'SELECT * FROM tbl_cp_student_school WHERE student_id = ? ORDER BY standard',
             [user_id]
         );
         
@@ -198,7 +198,7 @@ async function buildDraftFromDb(user_id) {
         );
         
         if (workRows.length > 0) {
-            draft.workExperience = workRows.map(w => ({
+            draft.work = workRows.map(w => ({
                 company: w.company_name,
                 designation: w.designation,
                 location: w.company_location,
@@ -280,10 +280,7 @@ async function buildDraftFromDb(user_id) {
         );
         
         if (intRows.length > 0) {
-            draft.interests = intRows.map(i => ({
-                id: i.interest_id,
-                name: i.name
-            }));
+            draft.interests = intRows.map(i => i.name).filter(Boolean);
         }
 
         // 11. Certifications via M2M

@@ -12,9 +12,10 @@ const app = express();
 
 // Support multiple frontend origins (comma-separated) for dev environments
 // Example: FRONTEND_ORIGINS=http://localhost:3000,http://localhost:8080
-const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || 'http://localhost:3000').split(',').map(s => s.trim());
+const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || 'http://localhost:3000,http://localhost:8080,http://localhost:8081').split(',').map(s => s.trim());
 
 // CORS: allow requests from configured origins. For unknown origins, deny gracefully
+// Support preflight requests properly
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, postman)
@@ -26,9 +27,13 @@ app.use(cors({
     return callback(null, false);
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 
-logger.info('Allowed CORS origins:', FRONTEND_ORIGINS.join(','));
+logger.info('Allowed CORS origins:', FRONTEND_ORIGINS.join(', '));
+
 // Limit incoming JSON bodies to prevent huge uploads from crashing the server.
 // Increase default to 5mb because registration payloads (education/work/projects) can be larger.
 const BODY_LIMIT = process.env.BODY_LIMIT || '5mb';

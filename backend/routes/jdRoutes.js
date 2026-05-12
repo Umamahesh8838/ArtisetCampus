@@ -18,11 +18,11 @@ const { requireRole } = require('../middleware/rbac');
 // Get all active job descriptions
 router.get('/', jdController.getJDs);
 
-// Get JD by ID
-router.get('/:id', jdController.getJDById);
-
 // Get all JDs for a specific company
 router.get('/company/:companyId', jdController.getJDsForCompany);
+
+// Get JD by ID
+router.get('/:id', jdController.getJDById);
 
 // ============================================================================
 // PROTECTED ROUTES - Admin/TPO/Recruiter Only

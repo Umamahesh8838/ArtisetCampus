@@ -86,8 +86,11 @@ function normalizeDraft(raw) {
     };
   }) : [];
 
-  // Work Experience
-  draft.workExperience = Array.isArray(draft.workExperience) ? draft.workExperience.map(w => ({
+  // Work Experience (support both work and workExperience keys)
+  const rawWork = Array.isArray(draft.workExperience)
+    ? draft.workExperience
+    : (Array.isArray(draft.work) ? draft.work : []);
+  draft.workExperience = rawWork.map(w => ({
     company: trimStr(w.company || w.company_name || '', 200) || null,
     location: trimStr(w.location || w.company_location || '', 200) || null,
     designation: trimStr(w.designation || '', 200) || null,
@@ -95,7 +98,7 @@ function normalizeDraft(raw) {
     startDate: normalizeDate(w.startDate || w.start_date || null),
     endDate: normalizeDate(w.endDate || w.end_date || null),
     current: !!w.current
-  })).filter(x => x.company) : [];
+  })).filter(x => x.company);
 
   // Projects
   draft.projects = Array.isArray(draft.projects) ? draft.projects.map(p => ({
@@ -109,7 +112,16 @@ function normalizeDraft(raw) {
   // Skills, languages, interests, certifications
   draft.skills = Array.isArray(draft.skills) ? draft.skills.map(s => ({ name: trimStr(s.name || s.skill || '', 200) })).filter(s => s.name) : [];
   draft.languages = Array.isArray(draft.languages) ? draft.languages.map(l => ({ name: trimStr(l.name || l.language || '', 200) })).filter(l => l.name) : [];
-  draft.interests = Array.isArray(draft.interests) ? draft.interests.map(i => trimStr(i || '')).filter(Boolean) : [];
+  draft.interests = Array.isArray(draft.interests)
+    ? draft.interests
+        .map(i => {
+          if (typeof i === 'object' && i !== null) {
+            return trimStr(i.name || i.interestName || i.interest_name || '', 200);
+          }
+          return trimStr(i || '', 200);
+        })
+        .filter(Boolean)
+    : [];
   draft.certifications = Array.isArray(draft.certifications) ? draft.certifications.map(c => ({ name: trimStr(c.name || '', 200) || null, organization: trimStr(c.organization || c.issuer || '', 200) || null, issueDate: normalizeDate(c.issueDate || c.issue_date || null), expiryDate: normalizeDate(c.expiryDate || c.expiry_date || null), url: trimStr(c.url || c.certificate_url || '', 1000) || null })).filter(c => c.name) : [];
 
   return draft;
