@@ -1,0 +1,107 @@
+name: Database Migration
+
+on:
+  push:
+    branches:
+      - Campus-DB-Dev      # Triggers on push to dev branch
+      - Campus-DB-QA       # Triggers on push to qa branch
+      - Campus-DB-Prod     # Triggers on push to main/prod branch
+  workflow_dispatch:       # Allow manual triggering from Actions tab
+
+jobs:
+  migrate-dev:
+    if: github.ref == 'refs/heads/Campus-DB-Dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Debug Info
+        run: |
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Migration files:"
+          ls -la ${{ github.workspace }}/db/migrations/
+
+      - name: Run Flyway Migration on DEV
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.DEV_DB_HOST }}:3306/${{ secrets.DEV_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.DEV_DB_USER }}" \
+            -password="${{ secrets.DEV_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            migrate
+
+      - name: Log Migration Success
+        if: success()
+        run: echo "✅ DEV database migration completed successfully"
+
+      - name: Log Migration Failure
+        if: failure()
+        run: echo "❌ DEV database migration failed"
+
+  migrate-qa:
+    if: github.ref == 'refs/heads/Campus-DB-QA'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Debug Info
+        run: |
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Migration files:"
+          ls -la ${{ github.workspace }}/db/migrations/
+
+      - name: Run Flyway Migration on QA
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.QA_DB_HOST }}:3306/${{ secrets.QA_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.QA_DB_USER }}" \
+            -password="${{ secrets.QA_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            migrate
+
+      - name: Log Migration Success
+        if: success()
+        run: echo "✅ QA database migration completed successfully"
+
+      - name: Log Migration Failure
+        if: failure()
+        run: echo "❌ QA database migration failed"
+
+  migrate-prod:
+    if: github.ref == 'refs/heads/Campus-DB-Prod'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Debug Info
+        run: |
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Migration files:"
+          ls -la ${{ github.workspace }}/db/migrations/
+
+      - name: Run Flyway Migration on PROD
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.PROD_DB_HOST }}:3306/${{ secrets.PROD_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.PROD_DB_USER }}" \
+            -password="${{ secrets.PROD_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            migrate
+
+      - name: Log Migration Success
+        if: success()
+        run: echo "✅ PROD database migration completed successfully"
+
+      - name: Log Migration Failure
+        if: failure()
+        run: echo "❌ PROD database migration failed"
