@@ -1,5 +1,5 @@
 -- ============================================================================
--- CAMPUS6 SCHEMA METADATA TABLE
+-- CAMPUS6 SCHEMA METADATA TABL
 -- Contains: table_name, primary_key, foreign_keys, super_keys, section, notes
 -- Total tables documented: 52
 -- ============================================================================
