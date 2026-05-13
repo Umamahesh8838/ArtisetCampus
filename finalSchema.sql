@@ -7,8 +7,8 @@
 -- Tables are ordered so every FK reference is defined before it is used.
 -- ============================================================================
 
-CREATE DATABASE IF NOT EXISTS campus6;
-USE campus6;
+CREATE DATABASE IF NOT EXISTS Campus-DB-Dev;
+USE Campus-DB-Dev;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -1039,7 +1039,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- SECTION 16 – Placements            : tbl_cp_placements
 -- ============================================================================
 
-ALTER TABLE campus6.tbl_cp_mcountries 
+ALTER TABLE tbl_cp_mcountries 
 MODIFY COLUMN country_code VARCHAR(5) NULL DEFAULT NULL;
 
 ALTER TABLE tbl_cp_mskills ALTER COLUMN language_id SET DEFAULT 1;
