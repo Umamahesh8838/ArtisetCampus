@@ -6,8 +6,7 @@ on:
       - Campus-DB-Dev      # Triggers on push to dev branch
       - Campus-DB-QA       # Triggers on push to qa branch
       - Campus-DB-Prod     # Triggers on push to main/prod branch
-    paths:
-      - 'db/migrations/**'  # Only runs when migration files change
+  workflow_dispatch:       # Allow manual triggering from Actions tab
 
 jobs:
   migrate-dev:
