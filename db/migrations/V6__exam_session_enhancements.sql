@@ -19,4 +19,5 @@ ALTER TABLE tbl_cp_m2m_exam_question_response
 -- Optional indexes (improve lookups)
 CREATE INDEX idx_exam_session_token ON tbl_cp_exam_session(session_token);
 CREATE INDEX idx_exam_session_status ON tbl_cp_exam_session(status);
-CREATE INDEX idx_response_exam_user ON tbl_cp_m2m_exam_question_response(exam_session_id, user_id);
+-- user_id column does not exist; index on exam_session_id + question_id is more appropriate
+CREATE INDEX idx_response_exam_question ON tbl_cp_m2m_exam_question_response(exam_session_id, question_id);
