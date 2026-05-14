@@ -10,21 +10,25 @@ const logger = require('../utils/logger');
 // Get all questions (active only by default, with module and difficulty lookups)
 async function getQuestions(req, res) {
   try {
-    const { limit = 50, offset = 0, module_id, difficulty_id, is_active = 1 } = req.query;
-    
+    const { limit = 50, offset = 0, module_id, difficulty_id, is_active } = req.query;
+
     let query = `SELECT q.*, m.module_name, d.level_label as difficulty_label
                  FROM tbl_cp_mquestions q
                  LEFT JOIN tbl_cp_mmodule m ON q.module_id = m.module_id
                  LEFT JOIN tbl_cp_mdifficulty d ON q.difficulty_id = d.difficulty_id
                  WHERE 1=1`;
-    
+
     const values = [];
-    
-    // Filter by active status
-    if (is_active !== undefined) {
-      query += ' AND q.is_active = ?';
-      values.push(is_active === '1' || is_active === true ? 1 : 0);
+
+    // Filter by active status: default to 1 when not provided
+    let activeVal;
+    if (is_active === undefined) {
+      activeVal = 1;
+    } else {
+      activeVal = (String(is_active) === '1' || String(is_active).toLowerCase() === 'true') ? 1 : 0;
     }
+    query += ' AND q.is_active = ?';
+    values.push(activeVal);
     
     if (module_id) {
       query += ' AND q.module_id = ?';
@@ -36,10 +40,12 @@ async function getQuestions(req, res) {
       values.push(difficulty_id);
     }
     
-    query += ' ORDER BY q.created_at DESC LIMIT ? OFFSET ?';
-    values.push((parseInt(limit, 10) || 20), (parseInt(offset, 10) || 0));
+    // Use numeric interpolation for LIMIT/OFFSET to avoid driver binding issues
+    const safeLimit = parseInt(limit, 10) || 50;
+    const safeOffset = parseInt(offset, 10) || 0;
+    query += ` ORDER BY q.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-    console.log(query, values);
+    logger.debug('getQuestions - executing query', { query: query.trim(), values });
     const [rows] = await pool.query(query, values);
     
     // Count total matching

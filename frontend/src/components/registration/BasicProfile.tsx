@@ -3,13 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DOBPicker } from "@/components/ui/dob-picker";
 import { useRegistration } from "@/contexts/RegistrationContext";
 import client from "@/api/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarIcon, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSalutations } from "@/hooks/useLookup";
 
@@ -237,21 +236,14 @@ const BasicProfile = () => {
         </div>
         <div className="space-y-1.5">
           <label className="field-label" htmlFor="field-dob">Date of Birth <span className="field-required">*</span></label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button id="field-dob" variant="outline" className={cn("w-full justify-start text-left font-normal", !data.dob && "text-muted-foreground", missingFields.includes('dob') && "border-destructive focus-visible:ring-destructive")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {data.dob ? format(data.dob, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single" selected={data.dob} onSelect={d => update('dob', d)}
-                disabled={date => date > new Date()}
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <div>
+            <DOBPicker
+              value={data.dob}
+              onChange={(d: Date) => update('dob', d)}
+              disabled={false}
+              error={missingFields.includes('dob')}
+            />
+          </div>
           {missingFields.includes('dob') && <p className="text-xs text-destructive mt-1">This field is required</p>}
         </div>
         <div className="space-y-1.5">

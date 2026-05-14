@@ -228,9 +228,12 @@ async function getAllUsers(req, res) {
       values.push(is_active === 'true' || is_active == 1 ? 1 : 0);
     }
     
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    values.push((parseInt(limit, 10) || 20), (parseInt(offset, 10) || 0));
-    
+    // Use numeric interpolation for LIMIT/OFFSET to avoid driver issues with bound params
+    const safeLimit = parseInt(limit, 10) || 20;
+    const safeOffset = parseInt(offset, 10) || 0;
+    query += ` ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+
+    logger.debug('getAllUsers - executing query', { query: query.trim(), values });
     const [users] = await pool.execute(query, values);
     
     // Get total count
@@ -387,7 +390,7 @@ async function updateUser(req, res) {
     
     // Verify user exists
     const [users] = await pool.execute(
-      'SELECT user_id FROM users WHERE user_id = ?',
+      'SELECT id FROM users WHERE id = ?',
       [id]
     );
     
@@ -459,7 +462,7 @@ async function deleteUser(req, res) {
     
     // Verify user exists
     const [users] = await pool.execute(
-      'SELECT user_id FROM users WHERE user_id = ?',
+      'SELECT id FROM users WHERE id = ?',
       [id]
     );
     
@@ -469,7 +472,7 @@ async function deleteUser(req, res) {
     
     // Soft delete - mark as inactive
     await pool.execute(
-      'UPDATE users SET is_active = 0, updated_date = NOW() WHERE user_id = ?',
+      'UPDATE users SET is_active = 0, updated_at = NOW() WHERE id = ?',
       [id]
     );
     

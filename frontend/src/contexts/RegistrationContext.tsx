@@ -181,6 +181,20 @@ export const RegistrationProvider: React.FC<{ children: React.ReactNode, mode?: 
   const updateDraftAndGoNext = useCallback((section: string, data: any) => {
     const newDraft = { ...draftData, [section]: data };
     setDraftData(newDraft); // Local state update
+
+    // Ensure Date objects are serialized to ISO strings before sending to backend
+    const serialize = (obj: any): any => {
+      if (obj instanceof Date) return obj.toISOString();
+      if (Array.isArray(obj)) return obj.map(serialize);
+      if (obj && typeof obj === 'object') {
+        const out: any = {};
+        for (const k of Object.keys(obj)) {
+          out[k] = serialize((obj as any)[k]);
+        }
+        return out;
+      }
+      return obj;
+    };
     
     const token = localStorage.getItem('authToken'); // changed to authToken
     
@@ -194,7 +208,8 @@ export const RegistrationProvider: React.FC<{ children: React.ReactNode, mode?: 
     }
 
     if (token) {
-      client.put('/auth/registration/draft', { draft: newDraft, step: nextSectionId })
+      const payloadDraft = serialize(newDraft);
+      client.put('/auth/registration/draft', { draft: payloadDraft, step: nextSectionId })
         .catch(console.error);
       
       if (nextSectionId === 'completed') {

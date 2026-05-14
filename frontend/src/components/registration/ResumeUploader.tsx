@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useRegistration } from "@/contexts/RegistrationContext";
 import { toast } from "sonner";
 import { Upload, FileText, Sparkles, X, Loader2 } from "lucide-react";
+import client from "@/api/client";
 
 const RESUME_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000") + "/resume/parse-preview";
 
@@ -38,10 +39,19 @@ const ResumeUploader = () => {
       toast.error("Please upload a resume first");
       return;
     }
-
+    // Best-effort: upload the resume to storage first, then parse it.
     setParsing(true);
     const loadingToastId = toast.loading("Parsing your resume... this may take several minutes");
     try {
+      try {
+        const upForm = new FormData();
+        upForm.append('file', file);
+        await client.post('/upload/resume', upForm, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } catch (uploadErr) {
+        // don't block parsing if upload fails; just log
+        console.warn('Upload before parse failed:', uploadErr?.message || uploadErr);
+      }
+
       const token = localStorage.getItem('authToken');
       const formData = new FormData();
       formData.append("file", file);
@@ -236,6 +246,27 @@ const ResumeUploader = () => {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const handleUploadOnly = async () => {
+    if (!file) {
+      toast.error('Please upload a resume first');
+      return;
+    }
+
+    const loading = toast.loading('Uploading resume...');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      await client.post('/upload/resume', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.dismiss(loading);
+      toast.success('Resume uploaded successfully');
+      setParsed(true);
+    } catch (e: any) {
+      toast.dismiss(loading);
+      console.error('Upload error:', e);
+      toast.error('Failed to upload resume. Please try again.');
+    }
+  };
+
   return (
     <Card className="border-2 border-dashed border-primary/20 bg-gradient-to-br from-primary/[0.03] to-accent/30">
       <CardContent className="p-6">
@@ -297,6 +328,16 @@ const ResumeUploader = () => {
                   <Sparkles className="w-4 h-4" />
                 )}
                 {parsing ? "Parsing Resume..." : "Fill Data from Resume"}
+              </Button>
+
+              <Button
+                onClick={handleUploadOnly}
+                disabled={!file || parsing}
+                variant="outline"
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Upload only
               </Button>
 
               <span className="text-xs text-muted-foreground">

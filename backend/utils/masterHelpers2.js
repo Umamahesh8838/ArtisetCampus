@@ -25,9 +25,20 @@ async function resolveSkillId(connection, skillName) {
   const [rows] = await connection.execute(`SELECT skill_id FROM tbl_cp_mskills WHERE LOWER(name) = LOWER(?) LIMIT 1`, [valStr]);
   if (rows && rows.length) return rows[0].skill_id;
   
-  // Provide manual default values for NOT NULL columns to avoid database constraint errors
-  const dataColumns = ['name', 'version', 'complexity', 'status'];
-  const dataValues = [valStr, 'N/A', 'Beginner', 'Active'];
+  // Get or create a default language (General/Other)
+  let languageId = 1; // Default fallback
+  try {
+    const [langRows] = await connection.execute(`SELECT language_id FROM tbl_cp_mlanguages WHERE language_code = 'GEN' OR language_name LIKE '%General%' LIMIT 1`);
+    if (langRows && langRows.length) {
+      languageId = langRows[0].language_id;
+    }
+  } catch (err) {
+    // Use default fallback
+  }
+  
+  // Provide manual default values for NOT NULL columns including language_id
+  const dataColumns = ['name', 'version', 'complexity', 'status', 'language_id'];
+  const dataValues = [valStr, 'N/A', 'Beginner', 'Active', languageId];
   
   return await insertWithNextId(connection, 'tbl_cp_mskills', 'skill_id', dataColumns, dataValues);
 }

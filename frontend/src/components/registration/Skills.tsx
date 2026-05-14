@@ -68,11 +68,17 @@ const Skills = () => {
             <div className="space-y-1.5">
               <label className="field-label">Skill Name</label>
               <Select value={skill.name} onValueChange={v => update(idx, 'name', v)}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select Skill" /></SelectTrigger>
-                <SelectContent>
-                  {(SKILL_OPTIONS || []).map((s: any) => <SelectItem key={s.skill_id} value={s.name}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select Skill" />
+                    {/* If the parsed skill is not present in lookup options, show it as fallback */}
+                    {skill.name && !(SKILL_OPTIONS || []).some((s: any) => s.name === skill.name) && (
+                      <span className="ml-2 truncate">{skill.name}</span>
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(SKILL_OPTIONS || []).map((s: any) => <SelectItem key={s.skill_id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
             </div>
             <div className="space-y-1.5">
               <label className="field-label">Version</label>

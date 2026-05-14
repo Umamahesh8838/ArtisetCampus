@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,15 @@ const REQUIRED = ['college', 'course', 'startYear', 'endYear'];
 const CollegeEducation = () => {
   const { updateSectionCompletion, updateDraftAndGoNext, draftData, resumeData , mode } = useRegistration();
   const apiCourses = useCourses();
+
+  // derive unique courses list to avoid duplicate course entries
+  const uniqueCourses = useMemo(() => {
+    const map = new Map<string, any>();
+    (apiCourses || []).forEach((c: any) => {
+      if (!map.has(c.course_name)) map.set(c.course_name, c);
+    });
+    return Array.from(map.values());
+  }, [apiCourses]);
 
   useEffect(() => {
     if (resumeData?.college) {
@@ -67,9 +76,9 @@ const CollegeEducation = () => {
             <Select value={data.course} onValueChange={v => update('course', v)}>
               <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
               <SelectContent>
-                {(apiCourses || []).map((c: any) => (
+                {(uniqueCourses || []).map((c: any) => (
                   <SelectItem key={c.course_id} value={c.course_name}>
-                    {c.course_name} ({c.course_code})
+                    {c.course_name} {c.course_code ? `(${c.course_code})` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -82,9 +91,14 @@ const CollegeEducation = () => {
               <SelectContent>
                 {(apiCourses || [])
                   .filter((c: any) => c.course_name === data.course)
+                  // dedupe specializations
+                  .reduce((acc: any[], c: any) => {
+                    if (!acc.find(a => a.specialization_name === c.specialization_name)) acc.push(c);
+                    return acc;
+                  }, [])
                   .map((c: any) => (
                     <SelectItem key={`${c.course_id}-${c.specialization_code}`} value={c.specialization_name}>
-                      {c.specialization_name} ({c.specialization_code})
+                      {c.specialization_name} {c.specialization_code ? `(${c.specialization_code})` : ''}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -106,11 +120,43 @@ const CollegeEducation = () => {
           </div>
           <div className="space-y-1.5">
             <label className="field-label">CGPA</label>
-            <Input type="number" value={data.cgpa} onChange={e => update('cgpa', e.target.value)} placeholder="0.0" min="0" max="10" step="0.1" />
+            <Input
+              type="number"
+              value={data.cgpa}
+              onChange={e => {
+                const v = e.target.value;
+                // update CGPA and compute percentage (assume 9.5 multiplier for conversion)
+                const cg = parseFloat(v);
+                let perc = '';
+                if (!isNaN(cg)) {
+                  perc = (Math.round((cg * 9.5) * 100) / 100).toString();
+                }
+                setData(prev => ({ ...prev, cgpa: v, percentage: perc }));
+              }}
+              placeholder="0.0"
+              min="0"
+              max="10"
+              step="0.1"
+            />
           </div>
           <div className="space-y-1.5">
             <label className="field-label">Percentage</label>
-            <Input type="number" value={data.percentage} onChange={e => update('percentage', e.target.value)} placeholder="0.0" min="0" max="100" />
+            <Input
+              type="number"
+              value={data.percentage}
+              onChange={e => {
+                const v = e.target.value;
+                const p = parseFloat(v);
+                let cg = '';
+                if (!isNaN(p)) {
+                  cg = (Math.round((p / 9.5) * 100) / 100).toString();
+                }
+                setData(prev => ({ ...prev, percentage: v, cgpa: cg }));
+              }}
+              placeholder="0.0"
+              min="0"
+              max="100"
+            />
           </div>
         </div>
 

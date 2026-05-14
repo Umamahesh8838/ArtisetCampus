@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminDashboardController');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
+const { requireRole } = require('../middleware/rbac');
 
-// Make sure these require admin or TPO role in actual app
-router.get('/dashboard', auth, adminController.getDashboardStats);
-router.get('/reports', auth, adminController.getReportsStats);
+// Admin/TPO routes - require authentication and proper role
+router.get('/dashboard', authenticate, requireRole(['admin', 'tpo']), adminController.getDashboardStats);
+router.get('/reports', authenticate, requireRole(['admin', 'tpo']), adminController.getReportsStats);
 
 module.exports = router;

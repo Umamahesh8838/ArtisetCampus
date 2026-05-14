@@ -63,6 +63,9 @@ app.use('/jds', jdRoutes);
 app.use('/questions', questionRoutes);
 app.use('/rounds', roundRoutes);
 
+// Admin dashboard and reports
+app.use('/admin', require('./routes/adminDashboardRoutes'));
+
 
 const PORT = process.env.PORT || 3000;
 

@@ -36,12 +36,12 @@ async function processRegistration(connection, user_id, draft) {
   try {
     // 1. Fetch user basic info from users table
     const [userRows] = await connection.execute(
-      'SELECT first_name, last_name, email, phone FROM users WHERE id = ?',
+      'SELECT first_name, last_name, email, phone FROM users WHERE id = ? LIMIT 1',
       [user_id]
     );
 
     if (!userRows || userRows.length === 0) {
-      throw new Error('User not found');
+      throw new Error(`User not found for id: ${user_id}`);
     }
 
     const u = userRows[0];

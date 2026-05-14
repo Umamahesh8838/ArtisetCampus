@@ -141,7 +141,7 @@ async function buildDraftFromDb(user_id) {
         // 5. Semesters with subject marks
         try {
             const [semRows] = await conn.execute(
-                `SELECT sm.*, css.semester_id, subject_id, s.subject_name, css.credits
+                `SELECT sm.*, css.semester_id, css.subject_id, s.subject_name, css.credits
                  FROM tbl_cp_student_subject_marks sm
                  LEFT JOIN tbl_cp_college_sem_subject css ON sm.college_sem_subject_id = css.college_sem_subject_id
                  LEFT JOIN tbl_cp_msubjects s ON css.subject_id = s.subject_id

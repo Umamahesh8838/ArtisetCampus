@@ -459,6 +459,11 @@ async function submitRegistration(req, res) {
     if (conn) {
       await conn.rollback();
     }
+    if (err.message && err.message.includes('User not found')) {
+      logger.warn('submitRegistration user not found:', err.message);
+      return res.status(404).json({ error: 'User not found', details: err.message });
+    }
+
     logger.error('submitRegistration error:', err);
     return res.status(500).json({
       error: 'Registration submission failed',
