@@ -23,6 +23,36 @@ jobs:
 
       - name: Run Flyway Migration on DEV
         run: |
+          set -euo pipefail
+
+          echo "Running Flyway validate (DEV)..."
+          if ! VALIDATE_OUTPUT=$(docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.DEV_DB_HOST }}:3306/${{ secrets.DEV_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.DEV_DB_USER }}" \
+            -password="${{ secrets.DEV_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            validate 2>&1); then
+            echo "$VALIDATE_OUTPUT"
+            if echo "$VALIDATE_OUTPUT" | grep -qi "Detected failed migration to version"; then
+              echo "Detected failed migration metadata. Running Flyway repair on DEV..."
+              docker run --rm \
+                -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+                flyway/flyway:latest \
+                -url="jdbc:mysql://${{ secrets.DEV_DB_HOST }}:3306/${{ secrets.DEV_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+                -user="${{ secrets.DEV_DB_USER }}" \
+                -password="${{ secrets.DEV_DB_PASSWORD }}" \
+                -locations="filesystem:/flyway/sql" \
+                -baselineOnMigrate=true \
+                repair
+            else
+              echo "Flyway validate failed for a reason other than failed migration metadata."
+              exit 1
+            fi
+          fi
+
           docker run --rm \
             -v ${{ github.workspace }}/db/migrations:/flyway/sql \
             flyway/flyway:latest \
@@ -55,6 +85,36 @@ jobs:
 
       - name: Run Flyway Migration on QA
         run: |
+          set -euo pipefail
+
+          echo "Running Flyway validate (QA)..."
+          if ! VALIDATE_OUTPUT=$(docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.QA_DB_HOST }}:3306/${{ secrets.QA_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.QA_DB_USER }}" \
+            -password="${{ secrets.QA_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            validate 2>&1); then
+            echo "$VALIDATE_OUTPUT"
+            if echo "$VALIDATE_OUTPUT" | grep -qi "Detected failed migration to version"; then
+              echo "Detected failed migration metadata. Running Flyway repair on QA..."
+              docker run --rm \
+                -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+                flyway/flyway:latest \
+                -url="jdbc:mysql://${{ secrets.QA_DB_HOST }}:3306/${{ secrets.QA_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+                -user="${{ secrets.QA_DB_USER }}" \
+                -password="${{ secrets.QA_DB_PASSWORD }}" \
+                -locations="filesystem:/flyway/sql" \
+                -baselineOnMigrate=true \
+                repair
+            else
+              echo "Flyway validate failed for a reason other than failed migration metadata."
+              exit 1
+            fi
+          fi
+
           docker run --rm \
             -v ${{ github.workspace }}/db/migrations:/flyway/sql \
             flyway/flyway:latest \
@@ -88,6 +148,19 @@ jobs:
 
       - name: Run Flyway Migration on PROD
         run: |
+          set -euo pipefail
+
+          echo "Running Flyway validate (PROD)..."
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:mysql://${{ secrets.PROD_DB_HOST }}:3306/${{ secrets.PROD_DB_NAME }}?useSSL=true&serverTimezone=UTC" \
+            -user="${{ secrets.PROD_DB_USER }}" \
+            -password="${{ secrets.PROD_DB_PASSWORD }}" \
+            -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            validate
+
           docker run --rm \
             -v ${{ github.workspace }}/db/migrations:/flyway/sql \
             flyway/flyway:latest \
