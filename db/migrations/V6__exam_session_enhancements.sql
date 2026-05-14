@@ -1,7 +1,7 @@
 -- V6__exam_session_enhancements.sql
 -- Add lifecycle, token, timers, reconnect support to exam sessions.
 ALTER TABLE tbl_cp_exam_session
-  ADD COLUMN status VARCHAR(32) NOT NULL DEFAULT 'pending' AFTER jd_id,
+  ADD COLUMN status VARCHAR(32) NOT NULL DEFAULT 'pending' AFTER round_config_id,
   ADD COLUMN session_token VARCHAR(64) NULL DEFAULT NULL AFTER status,
   ADD COLUMN allotted_seconds INT NULL DEFAULT NULL AFTER session_token,
   ADD COLUMN started_at DATETIME NULL DEFAULT NULL AFTER allotted_seconds,
