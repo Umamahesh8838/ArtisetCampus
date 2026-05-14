@@ -42,6 +42,33 @@ async function resolveDifficultyId(conn, rawValue) {
   return rows.length ? rows[0].difficulty_id : null;
 }
 
+function extractScheduledDate(rawConfig) {
+  if (!rawConfig || typeof rawConfig !== 'object') {
+    return null;
+  }
+
+  return rawConfig.scheduledDate || rawConfig.scheduled_datetime || rawConfig.scheduled_at || null;
+}
+
+function hasScheduledDateField(rawConfig) {
+  if (!rawConfig || typeof rawConfig !== 'object') {
+    return false;
+  }
+
+  return Object.prototype.hasOwnProperty.call(rawConfig, 'scheduledDate')
+    || Object.prototype.hasOwnProperty.call(rawConfig, 'scheduled_datetime')
+    || Object.prototype.hasOwnProperty.call(rawConfig, 'scheduled_at');
+}
+
+function toValidDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /**
  * Get all rounds for a specific job description
  * Each JD can have multiple rounds (technical, interview, aptitude, etc.) configured
@@ -63,6 +90,7 @@ async function getJDRounds(req, res) {
     const isActiveCol = cols.includes('is_active') ? 'rc.is_active' : null;
     const isExamCol = cols.includes('is_exam') ? 'rc.is_exam' : (cols.includes('round_type') ? 'rc.round_type' : null);
     const configJsonCol = cols.includes('config_json') ? 'rc.config_json' : null;
+    const scheduledDateCol = cols.includes('scheduled_datetime') ? 'rc.scheduled_datetime' : null;
 
     if (!roundNameCol) {
       // don't fail hard — return minimal rows so UI can still show round placeholders
@@ -77,6 +105,7 @@ async function getJDRounds(req, res) {
     const selectList = ['rc.round_config_id', 'rc.jd_id', 'rc.round_number', `${roundNameCol} AS round_label`];
     if (isExamCol) selectList.push(`${isExamCol} AS is_exam`);
     if (configJsonCol) selectList.push(`${configJsonCol} AS config_json`);
+    if (scheduledDateCol) selectList.push(`${scheduledDateCol} AS scheduled_datetime`);
     selectList.push('rc.created_at', 'rc.updated_at');
 
     const whereClauses = ['rc.jd_id = ?'];
@@ -133,6 +162,11 @@ async function getJDRounds(req, res) {
           } catch {
             parsedConfig = {};
           }
+        }
+
+        const resolvedScheduledDate = round.scheduled_datetime || extractScheduledDate(parsedConfig);
+        if (resolvedScheduledDate) {
+          parsedConfig.scheduledDate = resolvedScheduledDate;
         }
 
         return {
@@ -331,6 +365,7 @@ async function updateRound(req, res) {
     await conn.beginTransaction();
 
     // 1. Verify round exists
+    const cols = await getTableColumns('tbl_cp_jd_round_config');
     const [roundRows] = await conn.execute(
       'SELECT * FROM tbl_cp_jd_round_config WHERE round_config_id = ?',
       [roundId]
@@ -359,7 +394,11 @@ async function updateRound(req, res) {
       updateValues.push(round_type);
     }
     if (config_json !== undefined) {
-      // config_json is no longer stored in the live round config table.
+      const scheduledDate = extractScheduledDate(config_json);
+      if (hasScheduledDateField(config_json) && cols.includes('scheduled_datetime')) {
+        updateFields.push('scheduled_datetime = ?');
+        updateValues.push(toValidDate(scheduledDate));
+      }
     }
 
     updateFields.push('updated_at = NOW()');
@@ -467,6 +506,9 @@ async function bulkSaveRoundsForJD(req, res) {
       // Normalize properties from request (frontend sends 'label', 'isExam', 'modules')
       const roundName = r.round_name !== undefined ? r.round_name : r.label;
       const isExam = r.is_exam !== undefined ? r.is_exam : r.isExam;
+      const rawConfig = r.config_json || r.config || {};
+      const scheduledDate = extractScheduledDate(rawConfig);
+      const scheduledDateFieldPresent = hasScheduledDateField(rawConfig);
       const modulePayload = [];
       if (Array.isArray(r.modules)) {
         for (const m of r.modules) {
@@ -530,6 +572,10 @@ async function bulkSaveRoundsForJD(req, res) {
           updateFields.push('is_exam = ?');
           updateValues.push(isExam ? 1 : 0);
         }
+        if (roundCols.includes('scheduled_datetime') && scheduledDateFieldPresent) {
+          updateFields.push('scheduled_datetime = ?');
+          updateValues.push(toValidDate(scheduledDate));
+        }
         if (roundCols.includes('is_active')) {
           updateFields.push('is_active = 1');
         }
@@ -578,6 +624,10 @@ async function bulkSaveRoundsForJD(req, res) {
           roundLabel,
           (r.round_type === 'aptitude' || r.round_type === 'coding_challenge' || isExam) ? 1 : 0,
         ];
+        if (roundCols.includes('scheduled_datetime') && scheduledDateFieldPresent) {
+          roundFields.push('scheduled_datetime');
+          roundValues.push(toValidDate(scheduledDate));
+        }
         if (roundCols.includes('is_active')) {
           roundFields.push('is_active');
           roundValues.push(1);
@@ -623,7 +673,7 @@ async function bulkSaveRoundsForJD(req, res) {
           const configPayload = {
             source: 'jd',
             jd_round_config_id: roundConfigId || null,
-            scheduledDate: rawConfig && rawConfig.scheduledDate ? rawConfig.scheduledDate : null,
+            scheduledDate: extractScheduledDate(rawConfig),
             modules: modulePayload || [],
             original: rawConfig
           };

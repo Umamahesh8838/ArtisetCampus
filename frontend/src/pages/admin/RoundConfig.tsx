@@ -98,14 +98,7 @@ export default function RoundConfigPage() {
           })) || []
         })}) || [];
 
-        if (backendRounds.length > 0) {
-          setRounds(backendRounds);
-        } else {
-          setRounds([
-            { round_number: 1, label: "Aptitude Test", isExam: true, modules: [], config: {} },
-            { round_number: 2, label: "Technical Interview", isExam: false, modules: [], config: {} },
-          ]);
-        }
+        setRounds(backendRounds);
       } catch (err: any) {
         toast.error("Failed to fetch round configurations");
       } finally {

@@ -141,14 +141,16 @@ async function getDashboardData(req, res) {
     try {
         // Next Exam
         const [nextExams] = await pool.execute(`
-            SELECT e.exam_date, r.round_name
-            FROM tbl_cp_exam_session e
-            JOIN tbl_cp_application a ON e.application_id = a.application_id
-            LEFT JOIN tbl_cp_jd_round_config rc ON e.round_config_id = rc.round_config_id
-            LEFT JOIN tbl_cp_recruitment_drive_round r ON rc.round_config_id = r.round_id
-            WHERE a.student_id = ? AND e.exam_date >= CURDATE()
-            ORDER BY e.exam_date ASC
-            LIMIT 1
+          SELECT e.exam_date, COALESCE(r.round_name, rc.round_label, 'Upcoming Exam') AS round_name
+          FROM tbl_cp_exam_session e
+          JOIN tbl_cp_application a ON e.application_id = a.application_id
+          LEFT JOIN tbl_cp_jd_round_config rc ON e.round_config_id = rc.round_config_id
+          LEFT JOIN tbl_cp_recruitment_drive_round r
+            ON r.drive_id = a.drive_id
+           AND r.round_number = rc.round_number
+          WHERE a.student_id = ? AND e.exam_date >= CURDATE()
+          ORDER BY e.exam_date ASC
+          LIMIT 1
         `, [studentId]);
         if (nextExams.length > 0) {
             nextExam = nextExams[0].round_name ? nextExams[0].round_name : "Upcoming Exam";
