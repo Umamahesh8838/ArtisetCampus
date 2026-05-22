@@ -32,6 +32,10 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+        env:
+          VITE_API_URL: "https://artiset-backend-eka3fkdwfhcef2cx.centralindia-01.azurewebsites.net"
+          VITE_APP_NAME: "Artiset Campus"
+
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
