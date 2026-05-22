@@ -49,7 +49,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'artisetcampus-backend-qa'
+          app-name: 'artiset-backend-qa'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_539B3E84320C4A7593144844D8B4D27A }}
+          publish-profile: ${{ secrets.AZURE_WEB_APP_PUBLISH_KEY }}
